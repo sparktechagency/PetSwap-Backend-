@@ -20,7 +20,7 @@ class UserMiddleware
         try {
             $user = Auth::user();
 
-            if ($user->role == 'USER') {
+            if ($user->role == 'USER' || $user->role == 'ADMIN') {
                 return $next($request);
             }
 

@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Admin_Panel\CategoryController;
+use App\Http\Controllers\Admin_panel\SubCategoryController;
 use App\Http\Controllers\api\AuthController;
 use Illuminate\Support\Facades\Route;
 
@@ -26,18 +28,24 @@ Route::group(['middleware' => 'api'], function ($router) {
         Route::post('refresh', [AuthController::class, 'refresh'])->name('refresh_token');
         Route::post('logout', [AuthController::class, 'logout'])->name('logout');
 
-
-
-
-        
         // user routes
-        Route::middleware('user')->as('user')->group(function () {
-
+        Route::middleware(['user'])->group(function () {
+            //get category and subcategory
+            Route::get('category', [CategoryController::class, 'index'])->name('category.index');
         });
 
         // admin routes
-        Route::middleware('admin')->prefix('admin/')->as('admin')->group(function () {
+        Route::middleware('admin')->group(function () {
+            // category
+            Route::post('category', [CategoryController::class, 'store'])->name('category.store');
+            Route::put('category/{id}', [CategoryController::class, 'update'])->name('category.update');
+            Route::delete('category/{id}', [CategoryController::class, 'delete'])->name('category.delete');
 
+            // subcategory
+            Route::get('subcategory', [SubCategoryController::class, 'index'])->name('subcategory.index');
+            Route::post('subcategory', [SubCategoryController::class, 'store'])->name('subcategory.store');
+            Route::put('subcategory/{id}', [SubCategoryController::class, 'update'])->name('subcategory.update');
+            Route::delete('subcategory/{id}', [SubCategoryController::class, 'delete'])->name('subcategory.delete');
         });
     });
 });
