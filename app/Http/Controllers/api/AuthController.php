@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
@@ -23,7 +24,6 @@ class AuthController extends Controller
             'email' => 'required|email|unique:users,email',
             'address' => 'required|string|max:255',
             'password' => 'required',
-            'c_password' => 'required|same:password',
         ]);
 
         if ($validator->fails()) {
@@ -98,7 +98,8 @@ class AuthController extends Controller
 
             if ($socialId) {
                 $token = JWTAuth::fromUser($existingUser);
-                return $this->respondWithToken($token);
+                $success = $this->respondWithToken($token);
+                return response()->json(['status' => true, 'message' => 'User login successfully.', 'data' => $success], 200);
             } elseif (is_null($existingUser->google_id) && is_null($existingUser->facebook_id)) {
                 return response()->json(['message' => 'User already exists. Sign in manually.'], 422);
             } else {
@@ -107,7 +108,8 @@ class AuthController extends Controller
                     'facebook_id' => $request->facebook_id ?? $existingUser->facebook_id,
                 ]);
                 $token = JWTAuth::fromUser($existingUser);
-                return $this->respondWithToken($token);
+                $success = $this->respondWithToken($token);
+                return response()->json(['status' => true, 'message' => 'User login successfully.', 'data' => $success], 200);
             }
         }
 
@@ -122,7 +124,8 @@ class AuthController extends Controller
             'status' => 'active',
         ]);
         $token = JWTAuth::fromUser($user);
-        return $this->respondWithToken($token);
+        $success = $this->respondWithToken($token);
+        return response()->json(['status' => true, 'message' => 'User login successfully.', 'data' => $success], 200);
     }
 
     public function verifyAccount(Request $request)
@@ -221,6 +224,11 @@ class AuthController extends Controller
             if (!$user) {
                 return response()->json(['status' => false, 'message' => 'Invalid token.'], 401);
             }
+            if ($user->avatar) {
+                $user->avatar = asset('storage/' . $user->avatar);
+            } else {
+                $user->avatar = asset('storage/user/default_avatar.jpeg');
+            }
             return response()->json(['status' => true, 'data' => $user], 200);
         } catch (Exception $e) {
             return response()->json(['status' => false, 'message' => 'User not authenticated.'], 401);
@@ -232,18 +240,39 @@ class AuthController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'nullable|string|max:255',
             'address' => 'nullable|string|max:255',
-            'image' => 'nullable|image|mimes:png,jpg,jpeg|max:2048',
+            'image' => 'sometimes|image|mimes:png,jpg,jpeg',
         ]);
+
         if ($validator->fails()) {
             return response()->json(['status' => false, 'message' => $validator->errors()], 400);
         }
+
         $user = Auth::user();
-        $user->update([
-            'name' => $request->name ?? $user->name,
-            'address' => $request->address ?? $user->address,
-            'image' => $request->image ?? $user->image,
-        ]);
-        return response()->json(['status' => true, 'message' => 'Profile update successfully'], 200);
+        $user->name = $request->name ?? $user->name;
+        $user->address = $request->address ?? $user->address;
+
+        if ($request->hasFile('image')) {
+            if ($user->avatar && $user->avatar !== 'user/default_avatar.png') {
+                $existing_image_path = str_replace('storage/', '', $user->avatar);
+                Storage::disk('public')->delete($existing_image_path);
+            }
+            $uploaded_image = $request->file('image');
+            $final_name = time() . '.' . $uploaded_image->extension();
+            $path = $uploaded_image->storeAs('user', $final_name, 'public');
+
+            $user->avatar = 'user/' . $final_name;
+        } else {
+            if (!$user->avatar) {
+                $user->avatar = 'user/default_avatar.jpeg';
+            }
+        }
+
+        $user->save();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Profile updated successfully',
+        ], 200);
     }
 
     public function changePassword(Request $request)
