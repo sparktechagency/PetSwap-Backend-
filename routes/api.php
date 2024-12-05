@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin_Panel\CategoryController;
+use App\Http\Controllers\Admin_Panel\FAQController;
 use App\Http\Controllers\Admin_Panel\SliderController;
 use App\Http\Controllers\Admin_panel\SubCategoryController;
 use App\Http\Controllers\api\AuthController;
@@ -36,6 +37,8 @@ Route::group(['middleware' => 'api'], function ($router) {
             Route::get('category', [CategoryController::class, 'index'])->name('category.index');
             // slider route
             Route::get('slider', [SliderController::class, 'index'])->name('slider.index');
+            // faq route
+            Route::get('faq', [FAQController::class, 'index'])->name('faq.index');
 
             //product route
             Route::get('product', [ProductController::class, 'index'])->name('product.index');
@@ -43,6 +46,10 @@ Route::group(['middleware' => 'api'], function ($router) {
             Route::put('product/{id}', [ProductController::class, 'update'])->name('product.update');
             Route::delete('product/{id}', [ProductController::class, 'delete'])->name('product.delete');
         });
+
+
+
+
 
         // admin routes
         Route::middleware('admin')->group(function () {
@@ -61,6 +68,11 @@ Route::group(['middleware' => 'api'], function ($router) {
             Route::post('subcategory', [SubCategoryController::class, 'store'])->name('subcategory.store');
             Route::put('subcategory/{id}', [SubCategoryController::class, 'update'])->name('subcategory.update');
             Route::delete('subcategory/{id}', [SubCategoryController::class, 'delete'])->name('subcategory.delete');
+
+            //faq
+            Route::post('faq', [FAQController::class, 'store'])->name('faq.store');
+            Route::put('faq/{id}', [FAQController::class, 'update'])->name('faq.update');
+            Route::delete('faq/{id}', [FAQController::class, 'delete'])->name('faq.delete');
         });
     });
 });
