@@ -26,6 +26,7 @@ return new class extends Migration
             $table->string('condition')->nullable();
             $table->boolean('is_food')->default(false);
             $table->string('weight')->nullable();
+            $table->enum('status', ['Approved','Pending','Canceled'])->default('Pending');
             $table->timestamps();
         });
     }

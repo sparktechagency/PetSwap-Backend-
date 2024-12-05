@@ -1,10 +1,10 @@
 <?php
 
 use App\Http\Controllers\Admin_Panel\CategoryController;
+use App\Http\Controllers\Admin_Panel\SliderController;
 use App\Http\Controllers\Admin_panel\SubCategoryController;
 use App\Http\Controllers\api\AuthController;
 use App\Http\Controllers\api\ProductController;
-use App\Models\Product;
 use Illuminate\Support\Facades\Route;
 
 Route::group(['middleware' => 'api'], function ($router) {
@@ -34,6 +34,8 @@ Route::group(['middleware' => 'api'], function ($router) {
         Route::middleware(['user'])->group(function () {
             //get category and subcategory
             Route::get('category', [CategoryController::class, 'index'])->name('category.index');
+            // slider route
+            Route::get('slider', [SliderController::class, 'index'])->name('slider.index');
 
             //product route
             Route::get('product', [ProductController::class, 'index'])->name('product.index');
@@ -42,15 +44,17 @@ Route::group(['middleware' => 'api'], function ($router) {
             Route::delete('product/{id}', [ProductController::class, 'delete'])->name('product.delete');
         });
 
-
-
-
         // admin routes
         Route::middleware('admin')->group(function () {
             // category
             Route::post('category', [CategoryController::class, 'store'])->name('category.store');
             Route::put('category/{id}', [CategoryController::class, 'update'])->name('category.update');
             Route::delete('category/{id}', [CategoryController::class, 'delete'])->name('category.delete');
+
+            //slider
+            Route::post('slider', [SliderController::class, 'store'])->name('slider.store');
+            Route::put('slider/{id}', [SliderController::class, 'update'])->name('slider.update');
+            Route::delete('slider/{id}', [SliderController::class, 'delete'])->name('slider.delete');
 
             // subcategory
             Route::get('subcategory', [SubCategoryController::class, 'index'])->name('subcategory.index');
