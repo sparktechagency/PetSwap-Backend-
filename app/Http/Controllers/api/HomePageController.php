@@ -1,0 +1,46 @@
+<?php
+
+namespace App\Http\Controllers\api;
+
+use App\Http\Controllers\Controller;
+use App\Models\Product;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+
+class HomePageController extends Controller
+{
+    public function recommended_to_you(Request $request)
+    {
+        $per_page = $request->per_page;
+        $products = Product::whereNot('user_id', Auth::user()->id)
+            ->where('status', 'Approved')
+            ->latest('view_count')
+            ->paginate($per_page ?? 10);
+
+        $products->getCollection()->transform(function ($product) {
+            $product->images = json_decode($product->images, true);
+            return $product;
+        });
+
+        return response()->json(['data' => $products]);
+    }
+
+    public function seller_collection(Request $request)
+    {
+        $per_page = $request->per_page;
+        $products = Product::with('wishlists')->whereNot('user_id', Auth::user()->id)
+            ->where('status', 'Approved')
+            ->inRandomOrder()
+            ->paginate($per_page ?? 10);
+
+        $products->getCollection()->transform(function ($product) {
+            $product->images = json_decode($product->images, true);
+            $product->wishlist_count = $product->wishlists->count();
+            unset($product->wishlists);
+            return $product;
+        });
+
+        return response()->json(['data' => $products]);
+    }
+
+}

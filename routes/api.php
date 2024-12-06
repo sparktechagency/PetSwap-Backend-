@@ -5,7 +5,9 @@ use App\Http\Controllers\Admin_Panel\FAQController;
 use App\Http\Controllers\Admin_Panel\SliderController;
 use App\Http\Controllers\Admin_panel\SubCategoryController;
 use App\Http\Controllers\api\AuthController;
+use App\Http\Controllers\api\HomePageController;
 use App\Http\Controllers\api\ProductController;
+use App\Http\Controllers\api\WishlistController;
 use Illuminate\Support\Facades\Route;
 
 Route::group(['middleware' => 'api'], function ($router) {
@@ -39,6 +41,10 @@ Route::group(['middleware' => 'api'], function ($router) {
             Route::get('slider', [SliderController::class, 'index'])->name('slider.index');
             // faq route
             Route::get('faq', [FAQController::class, 'index'])->name('faq.index');
+            // homepage route
+            Route::get('recommended', [HomePageController::class, 'recommended_to_you'])->name('home.recommended');
+            Route::get('seller-collection', [HomePageController::class, 'seller_collection'])->name('home.sellerCollection');
+            Route::post('add-to-wishlist', [WishlistController::class, 'addToWishlist'])->name('home.add_to_wishlist');
 
             //product route
             Route::get('product', [ProductController::class, 'index'])->name('product.index');

@@ -2,17 +2,17 @@
 
 namespace Database\Seeders;
 
-use App\Models\Product;
-use Illuminate\Database\Seeder;
+use App\Models\Wishlist;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use Illuminate\Database\Seeder;
 
-class ProductSeeder extends Seeder
+class WishlistSeeder extends Seeder
 {
     /**
      * Run the database seeds.
      */
     public function run(): void
     {
-        Product::factory()->count(20)->create();
+        Wishlist::factory()->count(100)->create();
     }
 }

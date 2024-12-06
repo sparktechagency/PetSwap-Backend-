@@ -38,11 +38,12 @@ class ProductFactory extends Factory
         $conditions = ['New', 'Used'];
         $isFood = fake()->boolean();
         $weights = [0.5, 1, 1.5, 2, 2.5];
+        $status=['Approved','Pending','Canceled'];
 
         return [
             'user_id' => Arr::random($users),
             'category_id' => $randomCategoryId,
-            'sub_category_id' => json_encode(Arr::random($subCategories, rand(1, 5))),
+            'sub_category_id' => json_encode(Arr::random($subCategories, rand(1, 2))),
             'title' => implode(' ', fake()->words(rand(1, 3))),
             'description' => implode(' ', fake()->sentences(rand(1, 4))),
             'images' => json_encode([
@@ -55,6 +56,8 @@ class ProductFactory extends Factory
             'condition' => Arr::random($conditions),
             'is_food' => $isFood,
             'weight' => $isFood ? Arr::random($weights) : null,
+            'status' => Arr::random($status),
+            'view_count'=> rand(1,100),
         ];
     }
 
