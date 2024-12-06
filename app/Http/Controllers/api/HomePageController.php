@@ -50,8 +50,6 @@ class HomePageController extends Controller
         return response()->json(['data' => $products]);
     }
 
-
-
     public function similarProduct(Request $request)
     {
         $per_page = $request->per_page;
@@ -75,4 +73,20 @@ class HomePageController extends Controller
         return response()->json(['data' => $products]);
     }
 
+    public function search(Request $request)
+    {
+        $per_page = $request->per_page;
+        $products = Product::with('user:id,name,avatar')->whereNot('user_id', Auth::user()->id)
+            ->where('status', 'Approved')
+            ->latest('view_count')
+            ->where('title', 'LIKE', '%' . $request->product_name . '%')
+            ->paginate($per_page ?? 10);
+
+        $products->getCollection()->transform(function ($product) {
+            $product->images = json_decode($product->images, true);
+            return $product;
+        });
+
+        return response()->json(['data' => $products]);
+    }
 }

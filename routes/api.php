@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin_panel\SubCategoryController;
 use App\Http\Controllers\api\AuthController;
 use App\Http\Controllers\api\HomePageController;
 use App\Http\Controllers\api\ProductController;
+use App\Http\Controllers\api\RatingController;
 use App\Http\Controllers\api\WishlistController;
 use Illuminate\Support\Facades\Route;
 
@@ -46,6 +47,7 @@ Route::group(['middleware' => 'api'], function ($router) {
             Route::get('seller-collection', [HomePageController::class, 'seller_collection'])->name('home.sellerCollection');
             Route::post('add-to-wishlist', [WishlistController::class, 'addToWishlist'])->name('home.add_to_wishlist');
             Route::get('similar-product', [HomePageController::class, 'similarProduct'])->name('home.similar_product');
+            Route::get('search', [HomePageController::class, 'search'])->name('home.search');
 
             //product route
             Route::get('product', [ProductController::class, 'index'])->name('product.index');
@@ -53,6 +55,12 @@ Route::group(['middleware' => 'api'], function ($router) {
             Route::get('product-detail/{id}', [ProductController::class, 'show'])->name('product.show');
             Route::put('product/{id}', [ProductController::class, 'update'])->name('product.update');
             Route::delete('product/{id}', [ProductController::class, 'delete'])->name('product.delete');
+
+            //rating route
+            Route::get('rating', [RatingController::class, 'index'])->name('rating.index');
+            Route::post('rating', [RatingController::class, 'store'])->name('rating.store');
+            // Route::put('rating/{id}', [RatingController::class, 'update'])->name('rating.update');
+            // Route::delete('rating/{id}', [RatingController::class, 'delete'])->name('rating.delete');
         });
 
 
