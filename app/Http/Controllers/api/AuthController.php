@@ -128,32 +128,32 @@ class AuthController extends Controller
         return response()->json(['status' => true, 'message' => 'User login successfully.', 'data' => $success], 200);
     }
 
-    public function verifyAccount(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'otp' => 'required|numeric',
-        ]);
+    // public function verifyAccount(Request $request)
+    // {
+    //     $validator = Validator::make($request->all(), [
+    //         'otp' => 'required|numeric',
+    //     ]);
 
-        if ($validator->fails()) {
-            return response()->json(['status' => false, 'message' => $validator->errors()], 400);
-        }
+    //     if ($validator->fails()) {
+    //         return response()->json(['status' => false, 'message' => $validator->errors()], 400);
+    //     }
 
-        try {
-            $user = User::where('otp', $request->otp)->first();
-            if ($user->otp === $request->otp && $user->otp_expires_at >= now()) {
-                $user->otp = null;
-                $user->otp_expires_at = null;
-                $user->email_verified_at = now();
-                $user->save();
-                $token = Auth::login($user);
-                $success = $this->respondWithToken($token);
+    //     try {
+    //         $user = User::where('otp', $request->otp)->first();
+    //         if ($user->otp === $request->otp && $user->otp_expires_at >= now()) {
+    //             $user->otp = null;
+    //             $user->otp_expires_at = null;
+    //             $user->email_verified_at = now();
+    //             $user->save();
+    //             $token = Auth::login($user);
+    //             $success = $this->respondWithToken($token);
 
-                return response()->json(['status' => true, 'message' => 'User login successfully.', 'data' => $success], 200);
-            }
-        } catch (Exception $e) {
-            return response()->json(['status' => false, 'message' => 'OTP is incorrect or has expired.'], 400);
-        }
-    }
+    //             return response()->json(['status' => true, 'message' => 'User login successfully.', 'data' => $success], 200);
+    //         }
+    //     } catch (Exception $e) {
+    //         return response()->json(['status' => false, 'message' => 'OTP is incorrect or has expired.'], 400);
+    //     }
+    // }
 
     public function forgetPassword(Request $request)
     {
@@ -189,10 +189,19 @@ class AuthController extends Controller
 
         $user = User::where('email', $request->email)->where('otp', $request->otp)->first();
         if ($user->otp === $request->otp && $user->otp_expires_at >= now()) {
-            $user->otp = null;
-            $user->otp_expires_at = null;
-            $user->save();
-            return response()->json(['status' => true, 'message' => 'Email and OTP match with our record.'], 200);
+            if($user->email_verified_at != null){
+                $user->otp = null;
+                $user->otp_expires_at = null;
+                $user->save();
+            }else{
+                $user->otp = null;
+                $user->otp_expires_at = null;
+                $user->email_verified_at = now();
+                $user->save();
+            }
+            $token = Auth::login($user);
+            $success = $this->respondWithToken($token);
+            return response()->json(['status' => true, 'message' => 'User login successfully.', 'data' => $success], 200);
         } else {
             return response()->json(['status' => false, 'message' => 'OTP is incorrect or has expired.'], 400);
         }

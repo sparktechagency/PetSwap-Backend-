@@ -163,4 +163,26 @@ class ProductController extends Controller
             ], 404);
         }
     }
+
+    public function show($id)
+    {
+        try {
+            $product = Product::findOrFail($id);
+            $product->images = json_decode($product->images, true) ?? [];
+            if (Auth::user()->id != $product->user_id) {
+                $product->view_count = $product->view_count + 1;
+                $product->save();
+            }
+            return response()->json([
+                'status' => true,
+                'data' => $product,
+            ], 200);
+        } catch (Exception $e) {
+            Log::error('Product show: ' . $e->getMessage());
+            return response()->json([
+                'status' => false,
+                'message' => "Product not found.",
+            ], 404);
+        }
+    }
 }

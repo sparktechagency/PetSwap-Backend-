@@ -45,10 +45,12 @@ Route::group(['middleware' => 'api'], function ($router) {
             Route::get('recommended', [HomePageController::class, 'recommended_to_you'])->name('home.recommended');
             Route::get('seller-collection', [HomePageController::class, 'seller_collection'])->name('home.sellerCollection');
             Route::post('add-to-wishlist', [WishlistController::class, 'addToWishlist'])->name('home.add_to_wishlist');
+            Route::get('similar-product', [HomePageController::class, 'similarProduct'])->name('home.similar_product');
 
             //product route
             Route::get('product', [ProductController::class, 'index'])->name('product.index');
             Route::post('product', [ProductController::class, 'store'])->name('product.store');
+            Route::get('product-detail/{id}', [ProductController::class, 'show'])->name('product.show');
             Route::put('product/{id}', [ProductController::class, 'update'])->name('product.update');
             Route::delete('product/{id}', [ProductController::class, 'delete'])->name('product.delete');
         });
