@@ -9,6 +9,7 @@ use App\Http\Controllers\api\HomePageController;
 use App\Http\Controllers\api\ProductController;
 use App\Http\Controllers\api\RatingController;
 use App\Http\Controllers\api\WishlistController;
+use App\Http\Controllers\OfferAskingController;
 use Illuminate\Support\Facades\Route;
 
 Route::group(['middleware' => 'api'], function ($router) {
@@ -61,6 +62,10 @@ Route::group(['middleware' => 'api'], function ($router) {
             Route::post('rating', [RatingController::class, 'store'])->name('rating.store');
             // Route::put('rating/{id}', [RatingController::class, 'update'])->name('rating.update');
             // Route::delete('rating/{id}', [RatingController::class, 'delete'])->name('rating.delete');
+
+            // offer asking
+            Route::post('asking-offer', [OfferAskingController::class, 'store'])->name('offer.store');
+            Route::post('offer-accept-reject/{id}', [OfferAskingController::class, 'accept_reject'])->name('offer.accept_reject');
         });
 
 
