@@ -9,6 +9,7 @@ use App\Http\Controllers\api\HomePageController;
 use App\Http\Controllers\api\ProductController;
 use App\Http\Controllers\api\RatingController;
 use App\Http\Controllers\api\WishlistController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OfferAskingController;
 use Illuminate\Support\Facades\Route;
 
@@ -66,11 +67,13 @@ Route::group(['middleware' => 'api'], function ($router) {
             // offer asking
             Route::post('asking-offer', [OfferAskingController::class, 'store'])->name('offer.store');
             Route::post('offer-accept-reject/{id}', [OfferAskingController::class, 'accept_reject'])->name('offer.accept_reject');
+
+            // notification route
+            Route::get('notifications',[NotificationController::class,'notifications'])->name('all_Notification');
+            Route::get('mark-notification/{id}',[NotificationController::class,'singleMark'])->name('singleMark');
+            Route::get('mark-all-notification',[NotificationController::class,'allMark'])->name('allMark');
+
         });
-
-
-
-
 
         // admin routes
         Route::middleware('admin')->group(function () {
