@@ -164,19 +164,45 @@ class ProductController extends Controller
         }
     }
 
-    public function show($id)
+    public function show(Request $request, $id)
     {
         try {
-            $product = Product::findOrFail($id);
+
+            $product = Product::where('id', $id)->first();
             $product->images = json_decode($product->images, true) ?? [];
+
             if (Auth::user()->id != $product->user_id) {
-                $product->view_count = $product->view_count + 1;
+                $product->view_count += 1;
                 $product->save();
             }
+
+            $response = [
+                'id' => $product->id,
+                'user_id' => $product->user_id,
+                'category_id' => $product->category_id,
+                'sub_category_id' => $product->sub_category_id,
+                'title' => $product->title,
+                'description' => $product->description,
+                'images' => array_map(function ($image) {
+                    return url($image);
+                }, $product->images),
+                'price' => $product->price,
+                'platform_fee' => $product->platform_fee,
+                'brand' => $product->brand,
+                'condition' => $product->condition,
+                'is_food' => $product->is_food,
+                'weight' => $product->weight,
+                'view_count' => $product->view_count,
+                'status' => $product->status,
+                'created_at' => $product->created_at,
+                'updated_at' => $product->updated_at,
+            ];
+
             return response()->json([
                 'status' => true,
-                'data' => $product,
+                'data' => $response,
             ], 200);
+
         } catch (Exception $e) {
             Log::error('Product show: ' . $e->getMessage());
             return response()->json([

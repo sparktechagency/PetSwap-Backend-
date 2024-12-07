@@ -68,6 +68,7 @@ Route::group(['middleware' => 'api'], function ($router) {
             Route::post('asking-offer', [OfferAskingController::class, 'store'])->name('offer.store');
             Route::post('offer-accept-reject/{id}', [OfferAskingController::class, 'accept_reject'])->name('offer.accept_reject');
 
+
             // notification route
             Route::get('notifications',[NotificationController::class,'notifications'])->name('all_Notification');
             Route::get('mark-notification/{id}',[NotificationController::class,'singleMark'])->name('singleMark');
