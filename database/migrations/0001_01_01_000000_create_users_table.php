@@ -24,6 +24,7 @@ return new class extends Migration
             $table->string('otp_expires_at')->nullable();
             $table->string('google_id')->nullable();
             $table->string('facebook_id')->nullable();
+            $table->string('stripe_account_id')->nullable();
             $table->enum('status', ['active', 'inactive'])->default('active');
             $table->rememberToken();
             $table->timestamps();
