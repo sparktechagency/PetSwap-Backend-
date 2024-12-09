@@ -9,44 +9,45 @@ use Illuminate\Support\Facades\Auth;
 
 class HomePageController extends Controller
 {
-    public function recommended_to_you(Request $request)
+
+    public function search(Request $request)
     {
-        $per_page = $request->per_page;
-        $products = Product::whereNot('user_id', Auth::user()->id)
+        $per_page = $request->get('per_page', 10);
+
+        $products = Product::with('user:id,name,avatar')
             ->where('status', 'Approved')
-            ->latest('view_count')
-            ->paginate($per_page ?? 10);
+            ->latest('view_count');
+
+        if ($request->filled('search')) {
+            $products->where(function ($query) use ($request) {
+                $query->where('title', 'LIKE', '%' . $request->search . '%')
+                    ->orWhere('brand', 'LIKE', '%' . $request->search . '%');
+            });
+        }
+
+        if ($request->filled('category_id')) {
+            $products->where('category_id', $request->category_id);
+        }
+
+        if ($request->has('sub_category_id')) {
+            $subCategoryIds = is_array($request->sub_category_id)
+            ? $request->sub_category_id
+            : explode(',', $request->sub_category_id);
+
+            $products->where(function ($query) use ($subCategoryIds) {
+                foreach ($subCategoryIds as $subCategoryId) {
+                    $query->orWhereJsonContains('sub_category_id', (int) $subCategoryId);
+                }
+            });
+        }
+
+        $products = $products->paginate($per_page);
 
         $products->getCollection()->transform(function ($product) {
             $product->images = json_decode($product->images, true);
             return $product;
         });
 
-        return response()->json(['data' => $products]);
-    }
-
-    public function seller_collection(Request $request)
-    {
-        $per_page = $request->per_page;
-
-        $products = Product::with(['wishlists', 'user:id,name,avatar'])->whereNot('user_id', Auth::user()->id)
-            ->where('status', 'Approved')
-            ->inRandomOrder()
-            ->paginate($per_page ?? 10);
-
-        $products->getCollection()->transform(function ($product) {
-            $product->images = json_decode($product->images, true);
-
-            $product->wishlist_count = $product->wishlists->count();
-            unset($product->wishlists);
-
-            $product->user = [
-                'id' => $product->user->id,
-                'name' => $product->user->name,
-                'avatar' => asset('storage/' . $product->user->avatar),
-            ];
-            return $product;
-        });
         return response()->json(['data' => $products]);
     }
 
@@ -73,20 +74,43 @@ class HomePageController extends Controller
         return response()->json(['data' => $products]);
     }
 
-    public function search(Request $request)
+    public function homePage(Request $request)
     {
+
         $per_page = $request->per_page;
-        $products = Product::with('user:id,name,avatar')->whereNot('user_id', Auth::user()->id)
-            ->where('status', 'Approved')
-            ->latest('view_count')
-            ->where('title', 'LIKE', '%' . $request->product_name . '%')
-            ->paginate($per_page ?? 10);
+        if ($request->type == 'recommended') {
+            $products = Product::with(['wishlists', 'user:id,name,avatar'])->whereNot('user_id', Auth::user()->id)
+                ->where('status', 'Approved')
+                ->latest('view_count')
+                ->paginate($per_page ?? 10);
 
-        $products->getCollection()->transform(function ($product) {
-            $product->images = json_decode($product->images, true);
-            return $product;
-        });
+            $products->getCollection()->transform(function ($product) {
+                $product->images = json_decode($product->images, true);
+                $product->wishlist_count = $product->wishlists->count();
+                unset($product->wishlists);
+                return $product;
+            });
+        }
+        if ($request->type == 'seller-collection') {
+            $products = Product::with(['wishlists', 'user:id,name,avatar'])->whereNot('user_id', Auth::user()->id)
+                ->where('status', 'Approved')
+                ->inRandomOrder()
+                ->paginate($per_page ?? 10);
 
+            $products->getCollection()->transform(function ($product) {
+                $product->images = json_decode($product->images, true);
+
+                $product->wishlist_count = $product->wishlists->count();
+                unset($product->wishlists);
+
+                $product->user = [
+                    'id' => $product->user->id,
+                    'name' => $product->user->name,
+                    'avatar' => asset('storage/' . $product->user->avatar),
+                ];
+                return $product;
+            });
+        }
         return response()->json(['data' => $products]);
     }
 }

@@ -11,6 +11,7 @@ use App\Http\Controllers\api\RatingController;
 use App\Http\Controllers\api\WishlistController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OfferAskingController;
+use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PaymentController;
 use Illuminate\Support\Facades\Route;
 
@@ -46,8 +47,7 @@ Route::group(['middleware' => 'api'], function ($router) {
             // faq route
             Route::get('faq', [FAQController::class, 'index'])->name('faq.index');
             // homepage route
-            Route::get('recommended', [HomePageController::class, 'recommended_to_you'])->name('home.recommended');
-            Route::get('seller-collection', [HomePageController::class, 'seller_collection'])->name('home.sellerCollection');
+            Route::get('home-page', [HomePageController::class, 'homePage'])->name('home.page');
             Route::post('add-to-wishlist', [WishlistController::class, 'addToWishlist'])->name('home.add_to_wishlist');
             Route::get('similar-product', [HomePageController::class, 'similarProduct'])->name('home.similar_product');
             Route::get('search', [HomePageController::class, 'search'])->name('home.search');
@@ -77,6 +77,10 @@ Route::group(['middleware' => 'api'], function ($router) {
 
 
             Route::post('payment', [PaymentController::class, 'createPayment'])->name('payment');
+
+            //order
+            Route::get('order',[OrderController::class,'order'])->name('order');
+
 
         });
 
