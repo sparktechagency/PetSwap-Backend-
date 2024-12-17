@@ -12,9 +12,12 @@ use Illuminate\Support\Facades\Validator;
 
 class SliderController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $sliders = Slider::all();
+        $per_page = $request->per_page ?? 10;
+
+        $sliders = Slider::paginate($per_page);
+
         return response()->json([
             'status' => true,
             'data' => $sliders,

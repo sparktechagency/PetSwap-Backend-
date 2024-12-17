@@ -50,7 +50,6 @@ Route::group(['middleware' => 'api'], function ($router) {
             Route::get('home-page', [HomePageController::class, 'homePage'])->name('home.page');
             Route::post('add-to-wishlist', [WishlistController::class, 'addToWishlist'])->name('home.add_to_wishlist');
             Route::get('similar-product', [HomePageController::class, 'similarProduct'])->name('home.similar_product');
-            Route::get('search', [HomePageController::class, 'search'])->name('home.search');
 
             //product route
             Route::get('product', [ProductController::class, 'index'])->name('product.index');
