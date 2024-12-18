@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             FAQSeeder::class,
             WishlistSeeder::class,
             RatingSeeder::class,
+            SettingSeeder::class,
         ]);
     }
 }

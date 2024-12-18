@@ -8,6 +8,7 @@ use App\Http\Controllers\api\AuthController;
 use App\Http\Controllers\api\HomePageController;
 use App\Http\Controllers\api\ProductController;
 use App\Http\Controllers\api\RatingController;
+use App\Http\Controllers\Api\SettingController;
 use App\Http\Controllers\api\WishlistController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OfferAskingController;
@@ -68,18 +69,18 @@ Route::group(['middleware' => 'api'], function ($router) {
             Route::post('asking-offer', [OfferAskingController::class, 'store'])->name('offer.store');
             Route::post('offer-accept-reject/{id}', [OfferAskingController::class, 'accept_reject'])->name('offer.accept_reject');
 
-
             // notification route
-            Route::get('notifications',[NotificationController::class,'notifications'])->name('all_Notification');
-            Route::get('mark-notification/{id}',[NotificationController::class,'singleMark'])->name('singleMark');
-            Route::get('mark-all-notification',[NotificationController::class,'allMark'])->name('allMark');
-
+            Route::get('notifications', [NotificationController::class, 'notifications'])->name('all_Notification');
+            Route::get('mark-notification/{id}', [NotificationController::class, 'singleMark'])->name('singleMark');
+            Route::get('mark-all-notification', [NotificationController::class, 'allMark'])->name('allMark');
 
             Route::post('payment', [PaymentController::class, 'createPayment'])->name('payment');
 
             //order
-            Route::get('order',[OrderController::class,'order'])->name('order');
+            Route::get('order', [OrderController::class, 'order'])->name('order');
 
+            //settings
+            Route::get('setting', [SettingController::class, 'getSetting'])->name('setting.get');
 
         });
 
@@ -105,6 +106,9 @@ Route::group(['middleware' => 'api'], function ($router) {
             Route::post('faq', [FAQController::class, 'store'])->name('faq.store');
             Route::put('faq/{id}', [FAQController::class, 'update'])->name('faq.update');
             Route::delete('faq/{id}', [FAQController::class, 'delete'])->name('faq.delete');
+
+            //settings
+            Route::post('setting', [SettingController::class, 'settingUpdate'])->name('setting.update');
         });
     });
 });
