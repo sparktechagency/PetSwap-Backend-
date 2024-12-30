@@ -131,6 +131,7 @@ class ProductController extends Controller
             return response()->json([
                 'status' => true,
                 'message' => "Product updated successfully.",
+                'data'=>$product,
             ], 200);
         } catch (Exception $e) {
             Log::error('Product update: ' . $e->getMessage());
