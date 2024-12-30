@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -151,4 +152,41 @@ class HomePageController extends Controller
         }
         return response()->json(['message' => 'No data found! please select type first'], 404);
     }
+
+    // public function index(Request $request)
+    // {
+    //     $per_page = $request->per_page ?? 10;
+
+    //     $products = Product::query();
+    //     if ($request->has('category_id')) {
+    //         $products = $products->where('category_id', $request->category_id);
+    //     }
+
+    //     if ($request->has('sub_category_id')) {
+    //         $subCategoryIds = is_array($request->sub_category_id)
+    //         ? $request->sub_category_id
+    //         : explode(',', $request->sub_category_id);
+
+    //         $products->where(function ($query) use ($subCategoryIds) {
+    //             foreach ($subCategoryIds as $subCategoryId) {
+    //                 $query->orWhereJsonContains('sub_category_id', (int) $subCategoryId);
+    //             }
+    //         });
+    //     }
+
+    //     $products = $products->paginate($per_page);
+    //     return $products;
+
+    //     $formattedProducts = $products->getCollection()->map(function ($product) {
+    //         $product->images = json_decode($product->images);
+    //         $product->sub_category_id = json_decode($product->sub_category_id);
+    //         return $product;
+    //     });
+    //     $products->setCollection($formattedProducts);
+    //     return response()->json([
+    //         'status' => true,
+    //         'message' => 'Product retrieved successfully',
+    //         'data' => $products,
+    //     ], 200);
+    // }
 }

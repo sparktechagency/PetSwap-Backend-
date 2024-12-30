@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin_Panel\FAQController;
 use App\Http\Controllers\Admin_Panel\SliderController;
 use App\Http\Controllers\Admin_panel\SubCategoryController;
 use App\Http\Controllers\api\AuthController;
+use App\Http\Controllers\api\HelpCenterController;
 use App\Http\Controllers\api\HomePageController;
 use App\Http\Controllers\api\ProductController;
 use App\Http\Controllers\api\RatingController;
@@ -53,10 +54,13 @@ Route::group(['middleware' => 'api'], function ($router) {
             Route::get('similar-product', [HomePageController::class, 'similarProduct'])->name('home.similar_product');
 
             //product route
+            // Route::get('home-product', [HomePageController::class, 'index'])->name('product.index');
+
             Route::get('product', [ProductController::class, 'index'])->name('product.index');
             Route::post('product', [ProductController::class, 'store'])->name('product.store');
             Route::get('product-detail/{id}', [ProductController::class, 'show'])->name('product.show');
             Route::put('product/{id}', [ProductController::class, 'update'])->name('product.update');
+            Route::put('product/status/{id}', [ProductController::class, 'statusUpdate'])->name('product.StatusUpdate');
             Route::delete('product/{id}', [ProductController::class, 'delete'])->name('product.delete');
 
             //rating route
@@ -79,6 +83,12 @@ Route::group(['middleware' => 'api'], function ($router) {
             //order
             Route::get('order', [OrderController::class, 'order'])->name('order');
 
+            //helpcenter
+            Route::get('help-center', [HelpCenterController::class, 'index']);
+            Route::post('help-center', [HelpCenterController::class, 'store']);
+            Route::put('help-center/{id}', [HelpCenterController::class, 'update']);
+            // Route::delete('product/{id}', [ProductController::class, 'delete'])->name('product.delete');
+
             //settings
             Route::get('setting', [SettingController::class, 'getSetting'])->name('setting.get');
 
@@ -97,10 +107,10 @@ Route::group(['middleware' => 'api'], function ($router) {
             Route::delete('slider/{id}', [SliderController::class, 'delete'])->name('slider.delete');
 
             // subcategory
-            Route::get('subcategory', [SubCategoryController::class, 'index'])->name('subcategory.index');
-            Route::post('subcategory', [SubCategoryController::class, 'store'])->name('subcategory.store');
+            // Route::get('subcategory', [SubCategoryController::class, 'index'])->name('subcategory.index');
+            // Route::post('subcategory', [SubCategoryController::class, 'store'])->name('subcategory.store');
             Route::put('subcategory/{id}', [SubCategoryController::class, 'update'])->name('subcategory.update');
-            Route::delete('subcategory/{id}', [SubCategoryController::class, 'delete'])->name('subcategory.delete');
+            // Route::delete('subcategory/{id}', [SubCategoryController::class, 'delete'])->name('subcategory.delete');
 
             //faq
             Route::post('faq', [FAQController::class, 'store'])->name('faq.store');

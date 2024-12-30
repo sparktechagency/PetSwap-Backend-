@@ -250,6 +250,7 @@ class AuthController extends Controller
             'name' => 'nullable|string|max:255',
             'address' => 'nullable|string|max:255',
             'image' => 'sometimes|image|mimes:png,jpg,jpeg',
+            'email'=>'nullable|email|max:255',
         ]);
 
         if ($validator->fails()) {
@@ -259,6 +260,7 @@ class AuthController extends Controller
         $user = Auth::user();
         $user->name = $request->name ?? $user->name;
         $user->address = $request->address ?? $user->address;
+        $user->email = $request->email ?? $user->email;
 
         if ($request->hasFile('image')) {
             if ($user->avatar && $user->avatar !== 'user/default_avatar.png') {
@@ -281,6 +283,7 @@ class AuthController extends Controller
         return response()->json([
             'status' => true,
             'message' => 'Profile updated successfully',
+            'data'=>$user,
         ], 200);
     }
 

@@ -16,21 +16,28 @@ class ProductController extends Controller
     public function index(Request $request)
     {
         $per_page = $request->per_page ?? 10;
-        $products = Product::where('user_id', Auth::user()->id)->paginate($per_page);
+        $products = Product::with('user:id,name,email,avatar')->withCount('wishlists')->where('title', 'LIKE', '%' . $request->search . '%');
+        if (Auth::user()->role == 'USER') {
+            $products = $products->where('user_id', Auth::user()->id)->where('status', 'Approved');
+        }
+
+        $products = $products->latest('id')->paginate($per_page);
         $formattedProducts = $products->getCollection()->map(function ($product) {
             $product->images = json_decode($product->images);
-            $product->sub_category_id = json_decode($product->sub_category_id);
+            // $product->sub_category_id = json_decode($product->sub_category_id);
             return $product;
         });
         $products->setCollection($formattedProducts);
         return response()->json([
             'status' => true,
+            'message' => 'Product retrieved successfully',
             'data' => $products,
         ], 200);
     }
 
     public function store(Request $request)
     {
+
         $validator = Validator::make($request->all(), [
             'category_id' => 'required|numeric',
             'sub_category_ids' => 'required|array',
@@ -83,11 +90,10 @@ class ProductController extends Controller
             'images' => 'nullable|array|max:5',
             'images.*' => 'image|mimes:jpeg,png,jpg|max:10240',
         ]);
-
+        if ($validator->fails()) {
+            return response()->json(['status' => false, 'message' => $validator->errors()], 400);
+        }
         try {
-            if ($validator->fails()) {
-                return response()->json(['status' => false, 'message' => $validator->errors()], 400);
-            }
             $product = Product::findOrFail($id);
             $imagePaths = json_decode($product->images, true) ?? [];
 
@@ -154,6 +160,7 @@ class ProductController extends Controller
             return response()->json([
                 'status' => true,
                 'message' => "Product delete successfully.",
+                'data' => $product,
             ], 200);
         } catch (Exception $e) {
             Log::error('Product delete: ' . $e->getMessage());
@@ -168,7 +175,7 @@ class ProductController extends Controller
     {
         try {
 
-            $product = Product::where('id', $id)->first();
+            $product = Product::with('user:id,name,email,avatar')->where('id', $id)->first();
             $product->images = json_decode($product->images, true) ?? [];
 
             if (Auth::user()->id != $product->user_id) {
@@ -196,6 +203,12 @@ class ProductController extends Controller
                 'status' => $product->status,
                 'created_at' => $product->created_at,
                 'updated_at' => $product->updated_at,
+                'user' => [
+                    'id' => $product->user->id,
+                    'name' => $product->user->name,
+                    'email' => $product->user->email,
+                    'avatar' => $product->user->avatar,
+                ],
             ];
 
             return response()->json([
@@ -205,6 +218,26 @@ class ProductController extends Controller
 
         } catch (Exception $e) {
             Log::error('Product show: ' . $e->getMessage());
+            return response()->json([
+                'status' => false,
+                'message' => "Product not found.",
+            ], 404);
+        }
+    }
+
+    public function statusUpdate(Request $request, $id)
+    {
+        try {
+            $product = Product::findOrFail($id);
+            $product->status = $request->status;
+            $product->save();
+            return response()->json([
+                'status' => true,
+                'message' => 'Product status updated successfully',
+                'data' => $product,
+            ], 200);
+        } catch (Exception $e) {
+            Log::error('Product status: ' . $e->getMessage());
             return response()->json([
                 'status' => false,
                 'message' => "Product not found.",

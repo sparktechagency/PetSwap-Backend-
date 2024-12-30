@@ -47,6 +47,7 @@ class SliderController extends Controller
         return response()->json([
             'status' => true,
             'message' => 'Slider create successfully.',
+            'data' => $slider,
         ], 200);
     }
     public function update(Request $request, $id)
@@ -76,6 +77,7 @@ class SliderController extends Controller
             return response()->json([
                 'status' => true,
                 'message' => 'Slider update successfully.',
+                'data' => $slider,
             ], 200);
         } catch (Exception $e) {
             Log::error('Slider Update:' . $e->getMessage());
@@ -100,7 +102,7 @@ class SliderController extends Controller
         } catch (Exception $e) {
             Log::error('Slider Delete:' . $e->getMessage());
             return response()->json([
-                'status' => true,
+                'status' => false,
                 'message' => 'Slider not found',
             ], 404);
         }

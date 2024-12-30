@@ -46,14 +46,22 @@ class SubCategoryController extends Controller
         if ($validator->fails()) {
             return response()->json(['status' => false, 'message' => $validator->errors()], 400);
         }
-        $subcategory = SubCategory::findOrFail($id);
-        $subcategory->update([
-            'name' => $request->name,
-        ]);
-        return response()->json([
-            'status' => true,
-            'message' => 'Subcategory update successfully',
-        ], 200);
+        try {
+            $subcategory = SubCategory::findOrFail($id);
+            $subcategory->update([
+                'name' => $request->name,
+            ]);
+            return response()->json([
+                'status' => true,
+                'message' => 'Subcategory update successfully',
+                'data' => $subcategory,
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Data not found',
+            ], 200);
+        }
     }
 
     public function delete($id)

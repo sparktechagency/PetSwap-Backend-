@@ -12,6 +12,11 @@ class Product extends Model
 
     protected $guarded = [];
 
+
+    protected $casts = [
+    'sub_category_id' => 'array', 
+];
+
     public function user()
     {
         return $this->belongsTo(User::class);
