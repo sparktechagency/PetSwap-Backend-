@@ -134,6 +134,7 @@ Route::group(['middleware' => 'api'], function ($router) {
 
             // dashboard route
             Route::get('overview',[DashboardController::class,'overview']);
+            Route::get('statistics',[DashboardController::class,'statistics']);
 
         });
     });

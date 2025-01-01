@@ -40,7 +40,7 @@ class AuthController extends Controller
             'role' => 'USER',
             'otp' => $otp,
             'otp_expires_at' => $otp_expires_at,
-            'status' => 'active',
+            'status' => 'inactive',
         ]);
 
         Mail::to($request->email)->send(new OtpMail($otp));
@@ -197,6 +197,7 @@ class AuthController extends Controller
                 $user->otp = null;
                 $user->otp_expires_at = null;
                 $user->email_verified_at = now();
+                $user->status='active';
                 $user->save();
             }
             $token = Auth::login($user);
