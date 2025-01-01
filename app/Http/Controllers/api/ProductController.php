@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers\api;
 
-use App\Http\Controllers\Controller;
-use App\Models\Product;
 use Exception;
+use App\Models\Rating;
+use App\Models\Product;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
@@ -131,7 +132,7 @@ class ProductController extends Controller
             return response()->json([
                 'status' => true,
                 'message' => "Product updated successfully.",
-                'data'=>$product,
+                'data' => $product,
             ], 200);
         } catch (Exception $e) {
             Log::error('Product update: ' . $e->getMessage());
@@ -179,6 +180,9 @@ class ProductController extends Controller
             $product = Product::with('user:id,name,email,avatar')->where('id', $id)->first();
             $product->images = json_decode($product->images, true) ?? [];
 
+            $last_rating=Rating::with('buyer')->where('products_id',$product->id)->latest()->first();
+            $rating_count=Rating::where('products_id',$product->id)->count();
+
             if (Auth::user()->id != $product->user_id) {
                 $product->view_count += 1;
                 $product->save();
@@ -204,12 +208,23 @@ class ProductController extends Controller
                 'status' => $product->status,
                 'created_at' => $product->created_at,
                 'updated_at' => $product->updated_at,
-                'user' => [
-                    'id' => $product->user->id,
-                    'name' => $product->user->name,
-                    'email' => $product->user->email,
-                    'avatar' => $product->user->avatar,
-                ],
+                // 'user' => [
+                //     'id' => $product->user->id,
+                //     'name' => $product->user->name,
+                //     'email' => $product->user->email,
+                //     'avatar' => $product->user->avatar,
+                // ],
+                'rating'=>[
+                    'id'=>$last_rating->id,
+                    'rating'=>$last_rating->rating,
+                    'review'=>$last_rating->review,
+                    'total_rating_count'=>$rating_count,
+                    'rating_user'=>[
+                                'id' => $last_rating->buyer->id,
+                        'name' => $last_rating->buyer->name,
+                        'avatar' => $last_rating->buyer->avatar,
+                    ],
+                ]
             ];
 
             return response()->json([

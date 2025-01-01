@@ -2,16 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\OfferPrice;
-use App\Models\Product;
+use Exception;
 use App\Models\User;
+use App\Models\Product;
+use App\Models\OfferPrice;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
 use App\Notifications\OfferAcceptNotification;
 use App\Notifications\OfferAskingNotification;
 use App\Notifications\OfferRejectNotification;
-use Exception;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Validator;
 
 class OfferAskingController extends Controller
 {
@@ -54,6 +55,7 @@ class OfferAskingController extends Controller
         return response()->json([
             'status' => true,
             'message' => "Offer asking successfully.",
+            'data'=>$offer,
         ], 200);
     }
 
@@ -81,6 +83,7 @@ class OfferAskingController extends Controller
                 return response()->json([
                     'status' => true,
                     'message' => "Offer accepted successfully.",
+                    'data'=>$offer,
                 ], 200);
             }
 
@@ -103,6 +106,7 @@ class OfferAskingController extends Controller
                 return response()->json([
                     'status' => true,
                     'message' => "Offer rejected successfully.",
+                    'data'=>$offer,
                 ], 200);
             }
 
@@ -112,6 +116,7 @@ class OfferAskingController extends Controller
             ], 400);
 
         } catch (Exception $e) {
+            Log::error($e->getMessage());
             return response()->json([
                 'status' => false,
                 'message' => "No data found.",

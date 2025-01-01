@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('amount');
             $table->string('seller_amount');
             $table->string('platform_fee');
+            $table->string('status');
             $table->string('stripe_payment_id');
             $table->timestamps();
         });

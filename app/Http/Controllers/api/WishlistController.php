@@ -29,15 +29,17 @@ class WishlistController extends Controller
             return response()->json([
                 'status' => true,
                 'message' => "Item removed from wishlist.",
+                'data'=>$wishlistItem,
             ], 200);
         } else {
-            Wishlist::create([
+            $wishlist=Wishlist::create([
                 'user_id' => Auth::user()->id,
                 'product_id' => $request->product_id,
             ]);
             return response()->json([
                 'status' => true,
                 'message' => "Item added to wishlist.",
+                'data'=>$wishlist,
             ], 200);
         }
     }

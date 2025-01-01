@@ -56,7 +56,7 @@ class HomePageController extends Controller
     {
         $per_page = $request->per_page;
         $productId = $request->product_id;
-        $currentProduct = Product::find($productId);
+        $currentProduct = Product::find($productId);  
         if (!$currentProduct) {
             return response()->json(['status' => false, 'message' => 'Product not found'], 404);
         }
@@ -69,11 +69,17 @@ class HomePageController extends Controller
 
         $products->getCollection()->transform(function ($product) {
             $product->images = json_decode($product->images, true);
+            $product->wishlist_count = $product->wishlists->count();
+            unset($product->wishlists);
             return $product;
         });
 
         return response()->json(['data' => $products]);
     }
+
+
+
+
 
     public function homePage(Request $request)
     {
@@ -131,8 +137,8 @@ class HomePageController extends Controller
 
             if ($request->has('sub_category_id')) {
                 $subCategoryIds = is_array($request->sub_category_id)
-                ? $request->sub_category_id
-                : explode(',', $request->sub_category_id);
+                    ? $request->sub_category_id
+                    : explode(',', $request->sub_category_id);
 
                 $products->where(function ($query) use ($subCategoryIds) {
                     foreach ($subCategoryIds as $subCategoryId) {
@@ -143,13 +149,19 @@ class HomePageController extends Controller
 
             $products = $products->paginate($per_page);
 
-            $products->getCollection()->transform(function ($product) {
+            $userId = $request->user() ? $request->user()->id : null;
+
+            $products->getCollection()->transform(function ($product) use ($userId) {
                 $product->images = json_decode($product->images, true);
+                $product->wishlist = $product->wishlists->contains('user_id', $userId);
+                $product->wishlist_count = $product->wishlists->count();
+                unset($product->wishlists);
                 return $product;
             });
-            return response()->json(['message' => 'Show search product', 'data' => $products]);
 
+            return response()->json(['message' => 'Show search product', 'data' => $products]);
         }
+
         return response()->json(['message' => 'No data found! please select type first'], 404);
     }
 

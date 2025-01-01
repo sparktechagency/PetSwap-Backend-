@@ -4,6 +4,9 @@ use App\Http\Controllers\Admin_Panel\CategoryController;
 use App\Http\Controllers\Admin_Panel\FAQController;
 use App\Http\Controllers\Admin_Panel\SliderController;
 use App\Http\Controllers\Admin_panel\SubCategoryController;
+use App\Http\Controllers\Admin_Panel\TransactionController;
+use App\Http\Controllers\Admin_Panel\UserController;
+use App\Http\Controllers\Admin_Panle\DashboardController;
 use App\Http\Controllers\api\AuthController;
 use App\Http\Controllers\api\HelpCenterController;
 use App\Http\Controllers\api\HomePageController;
@@ -82,6 +85,7 @@ Route::group(['middleware' => 'api'], function ($router) {
 
             //order
             Route::get('order', [OrderController::class, 'order'])->name('order');
+            Route::get('order/{id}',[OrderController::class,'order_details'])->name('orderDetails');
 
             //helpcenter
             Route::get('help-center', [HelpCenterController::class, 'index']);
@@ -119,6 +123,18 @@ Route::group(['middleware' => 'api'], function ($router) {
 
             //settings
             Route::post('setting', [SettingController::class, 'settingUpdate'])->name('setting.update');
+
+            // manage users
+            Route::get('manage-user',[UserController::class,'index']);
+            Route::get('user-details/{id}',[UserController::class,'userDetails']);
+            Route::get('user-statistics/{id}',[UserController::class,'userStatistics']);
+
+            // transactions
+            Route::get('transactions',[TransactionController::class,'transaction']);
+
+            // dashboard route
+            Route::get('overview',[DashboardController::class,'overview']);
+
         });
     });
 });

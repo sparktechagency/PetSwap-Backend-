@@ -27,6 +27,12 @@ class User extends Authenticatable implements JWTSubject
      */
     protected $hidden = [
         'password',
+        'deleted_at',
+        'updated_at',
+        'facebook_id',
+        'google_id',
+        'otp_expires_at',
+        'otp',
         'remember_token',
     ];
 
@@ -58,6 +64,6 @@ class User extends Authenticatable implements JWTSubject
     }
 
     public function wishlist(){
-        return $this->hasMany(Wishlist::class); 
+        return $this->hasMany(Wishlist::class);
     }
 }
