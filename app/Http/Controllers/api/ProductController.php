@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers\api;
 
-use Exception;
-use App\Models\Rating;
-use App\Models\Product;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
+use App\Models\Product;
+use App\Models\Rating;
+use Exception;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
@@ -42,7 +42,6 @@ class ProductController extends Controller
         $validator = Validator::make($request->all(), [
             'category_id' => 'required|numeric',
             'sub_category_ids' => 'required|array',
-            'sub_category_ids.*' => 'exists:sub_categories,id',
             'title' => 'required|string|max:255',
             'price' => 'required|numeric',
             'images' => 'nullable|array|max:5',
@@ -61,7 +60,7 @@ class ProductController extends Controller
         $product = Product::create([
             'user_id' => Auth::user()->id,
             'category_id' => $request->category_id,
-            'sub_category_id' => json_encode($request->sub_category_ids, true),
+            'sub_category_id' => $request->sub_category_ids,
             'title' => $request->title,
             'description' => $request->description,
             'images' => json_encode($imagePaths),
@@ -85,7 +84,6 @@ class ProductController extends Controller
         $validator = Validator::make($request->all(), [
             'category_id' => 'required|numeric',
             'sub_category_ids' => 'required|array',
-            'sub_category_ids.*' => 'exists:sub_categories,id',
             'title' => 'required|string|max:255',
             'price' => 'required|numeric',
             'images' => 'nullable|array|max:5',
@@ -116,9 +114,7 @@ class ProductController extends Controller
 
             $product->update([
                 'category_id' => $request->category_id ?? $product->category_id,
-                'sub_category_id' => $request->sub_category_ids
-                ? json_encode($request->sub_category_ids, true)
-                : $product->sub_category_id,
+                'sub_category_id' => $request->sub_category_ids,
                 'title' => $request->title ?? $product->title,
                 'description' => $request->description ?? $product->description,
                 'images' => json_encode($imagePaths),
@@ -176,18 +172,33 @@ class ProductController extends Controller
     public function show(Request $request, $id)
     {
         try {
-
-            $product = Product::with('user:id,name,email,avatar')->where('id', $id)->first();
+            $product = Product::with('user:id,name,email,avatar')->where('id', $id)->firstOrFail();
             $product->images = json_decode($product->images, true) ?? [];
 
-            $last_rating=Rating::with('buyer')->where('products_id',$product->id)->latest()->first();
-            $rating_count=Rating::where('products_id',$product->id)->count();
+            // Get the latest rating and count ratings
+            $last_rating = Rating::with('buyer')->where('products_id', $product->id)->latest()->first();
+            $rating_count = Rating::where('products_id', $product->id)->count();
 
+            // Increment view count if the authenticated user is not the owner
             if (Auth::user()->id != $product->user_id) {
                 $product->view_count += 1;
                 $product->save();
             }
 
+            // Prepare the rating data
+            $rating_data = $last_rating ? [
+                'id' => $last_rating->id,
+                'rating' => $last_rating->rating,
+                'review' => $last_rating->review,
+                'total_rating_count' => $rating_count,
+                'rating_user' => $last_rating->buyer ? [
+                    'id' => $last_rating->buyer->id,
+                    'name' => $last_rating->buyer->name,
+                    'avatar' => $last_rating->buyer->avatar,
+                ] : null,
+            ] : null;
+
+            // Prepare the product response
             $response = [
                 'id' => $product->id,
                 'user_id' => $product->user_id,
@@ -208,23 +219,7 @@ class ProductController extends Controller
                 'status' => $product->status,
                 'created_at' => $product->created_at,
                 'updated_at' => $product->updated_at,
-                // 'user' => [
-                //     'id' => $product->user->id,
-                //     'name' => $product->user->name,
-                //     'email' => $product->user->email,
-                //     'avatar' => $product->user->avatar,
-                // ],
-                'rating'=>[
-                    'id'=>$last_rating->id,
-                    'rating'=>$last_rating->rating,
-                    'review'=>$last_rating->review,
-                    'total_rating_count'=>$rating_count,
-                    'rating_user'=>[
-                                'id' => $last_rating->buyer->id,
-                        'name' => $last_rating->buyer->name,
-                        'avatar' => $last_rating->buyer->avatar,
-                    ],
-                ]
+                'rating' => $rating_data, // Include the rating data or null
             ];
 
             return response()->json([

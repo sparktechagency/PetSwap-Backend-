@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Category;
 use App\Models\Product;
+use function PHPSTORM_META\type;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -56,7 +56,7 @@ class HomePageController extends Controller
     {
         $per_page = $request->per_page;
         $productId = $request->product_id;
-        $currentProduct = Product::find($productId);  
+        $currentProduct = Product::find($productId);
         if (!$currentProduct) {
             return response()->json(['status' => false, 'message' => 'Product not found'], 404);
         }
@@ -76,10 +76,6 @@ class HomePageController extends Controller
 
         return response()->json(['data' => $products]);
     }
-
-
-
-
 
     public function homePage(Request $request)
     {
@@ -136,15 +132,7 @@ class HomePageController extends Controller
             }
 
             if ($request->has('sub_category_id')) {
-                $subCategoryIds = is_array($request->sub_category_id)
-                    ? $request->sub_category_id
-                    : explode(',', $request->sub_category_id);
-
-                $products->where(function ($query) use ($subCategoryIds) {
-                    foreach ($subCategoryIds as $subCategoryId) {
-                        $query->orWhereJsonContains('sub_category_id', (int) $subCategoryId);
-                    }
-                });
+                $products = $products->whereJsonContains('sub_category_id', $request->sub_category_id);
             }
 
             $products = $products->paginate($per_page);

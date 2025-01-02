@@ -12,10 +12,9 @@ class Product extends Model
 
     protected $guarded = [];
 
-
     protected $casts = [
-    'sub_category_id' => 'array', 
-];
+        'sub_category_id' => 'array',
+    ];
 
     public function user()
     {
@@ -27,9 +26,9 @@ class Product extends Model
         return $this->belongsTo(Category::class);
     }
 
-    public function wishlists(){
+    public function wishlists()
+    {
         return $this->hasMany(Wishlist::class);
     }
-
 
 }
