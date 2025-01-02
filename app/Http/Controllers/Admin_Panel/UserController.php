@@ -60,41 +60,66 @@ class UserController extends Controller
 
     public function userStatistics(Request $request, $id)
     {
-        $period = $request->period;
-
+        $type = $request->input('type', 'weekly');
         $currentDate = now();
+        $result = [];
 
-        switch ($period) {
+        switch ($type) {
             case 'weekly':
-                $startOfPeriod = $currentDate->copy()->startOfWeek();
-                $endOfPeriod = $currentDate->copy()->endOfWeek();
+                for ($i = 6; $i >= 0; $i--) {
+                    $date = $currentDate->copy()->subDays($i);
+                    $totalRevenue = Payment::where('seller_id', $id)
+                        ->whereDate('created_at', $date)
+                        ->sum('seller_amount');
+                    $result[] = [
+                        'week_day' => $date->format('l'),
+                        'total_revenue' => $totalRevenue,
+                    ];
+                }
                 break;
+
             case 'monthly':
-                $startOfPeriod = $currentDate->copy()->startOfMonth();
-                $endOfPeriod = $currentDate->copy()->endOfMonth();
+                $currentYear = $currentDate->year;
+                $revenueData = Payment::where('seller_id', $id)
+                    ->whereYear('created_at', $currentYear)
+                    ->selectRaw('MONTH(created_at) as month, SUM(seller_amount) as total_revenue')
+                    ->groupBy('month')
+                    ->orderBy('month', 'asc')
+                    ->get()
+                    ->keyBy('month');
+                for ($month = 1; $month <= 12; $month++) {
+                    $result[] = [
+                        'month' => date('F', mktime(0, 0, 0, $month, 1)),
+                        'total_revenue' => isset($revenueData[$month]) ? $revenueData[$month]->total_revenue : 0,
+                    ];
+                }
                 break;
             case 'yearly':
-                $startOfPeriod = $currentDate->copy()->startOfYear();
-                $endOfPeriod = $currentDate->copy()->endOfYear();
+                $startYear = $currentDate->year - 4;
+                $endYear = $currentDate->year;
+                for ($year = $startYear; $year <= $endYear; $year++) {
+                    $totalRevenue = Payment::where('seller_id', $id)
+                        ->whereYear('created_at', $year)
+                        ->sum('seller_amount');
+
+                    $result[] = [
+                        'year' => $year,
+                        'total_revenue' => $totalRevenue,
+                    ];
+                }
                 break;
             default:
-                $startOfPeriod = $currentDate->copy()->startOfWeek();
-                $endOfPeriod = $currentDate->copy()->endOfWeek();
-                break;
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Invalid type parameter',
+                    'data' => [],
+                ]);
         }
-
-        if ($period == 'weekly') {
-            $previousStartOfPeriod = now()->subWeek()->startOfWeek();
-            $previousEndOfPeriod = now()->subWeek()->endOfWeek();
-        } elseif ($period == 'monthly') {
-            $previousStartOfPeriod = now()->subMonth()->startOfMonth();
-            $previousEndOfPeriod = now()->subMonth()->endOfMonth();
-        } elseif ($period == 'yearly') {
-            $previousStartOfPeriod = now()->subYear()->startOfYear();
-            $previousEndOfPeriod = now()->subYear()->endOfYear();
-        }
-
-        return $previousStartOfPeriod . ' ' . $previousEndOfPeriod;
+        return response()->json([
+            'status' => true,
+            'message' => 'Data retrieved successfully',
+            'data' => $result,
+        ]);
     }
 
 }
