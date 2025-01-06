@@ -37,9 +37,17 @@ class ProductController extends Controller
         ], 200);
     }
 
+
+
+
+
+
+
+
+
+    
     public function store(Request $request)
     {
-
         $validator = Validator::make($request->all(), [
             'category_id' => 'required|numeric',
             'sub_category_ids' => 'required|array',
@@ -88,6 +96,21 @@ class ProductController extends Controller
             'message' => "You have exceeded the plan's capacity. Please Upgread your plan",
         ], 200);
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     public function update(Request $request, $id)
     {

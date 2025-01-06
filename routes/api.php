@@ -99,10 +99,12 @@ Route::group(['middleware' => 'api'], function ($router) {
             Route::get('setting', [SettingController::class, 'getSetting'])->name('setting.get');
 
             //product promotion
-            Route::post('product-promotion/{id}', [PromotionController::class, 'productPromotion'])->name('productPromotion');
+            Route::post('product-promotion/{id}', [PaymentController::class, 'productPromotion'])->name('productPromotion');
 
             //subcription plan
             Route::get('subcription-plan', [SubcriptionPlanController::class, 'subcriptionPlan']);
+            Route::post('subscription', [PaymentController::class, 'userSubscription']);
+
         });
 
         // admin routes

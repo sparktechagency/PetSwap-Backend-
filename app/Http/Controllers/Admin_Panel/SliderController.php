@@ -17,6 +17,10 @@ class SliderController extends Controller
         $per_page = $request->per_page ?? 10;
 
         $sliders = Slider::paginate($per_page);
+        $sliders->getCollection()->transform(function ($slider) {
+            $slider->image = asset('storage/' . $slider->image);
+            return $slider;
+        });
 
         return response()->json([
             'status' => true,
@@ -34,14 +38,12 @@ class SliderController extends Controller
             return response()->json(['status' => false, 'message' => $validator->errors()], 400);
         }
 
-        $imagePath = null;
         if ($request->hasFile('image')) {
             $path = $request->file('image')->store('sliders', 'public');
-            $imagePath = asset('storage/' . $path);
         }
 
         $slider = Slider::create([
-            'image' => $imagePath,
+            'image' => $path,
         ]);
 
         return response()->json([
@@ -65,12 +67,14 @@ class SliderController extends Controller
             if ($request->hasFile('image')) {
                 // Delete the old image if it exists
                 if ($slider->image) {
-                    $oldImagePath = str_replace(asset('storage/'), '', $slider->image);
-                    Storage::disk('public')->delete($oldImagePath);
+                    $relativeImagePath = $slider->image;
+                    if (Storage::disk('public')->exists($relativeImagePath)) {
+                        Storage::disk('public')->delete($relativeImagePath);
+                    }
                 }
                 // Store the new image
                 $path = $request->file('image')->store('sliders', 'public');
-                $slider->image = asset('storage/' . $path);
+                $slider->image =$path;
             }
             $slider->save();
 
@@ -92,8 +96,12 @@ class SliderController extends Controller
     {
         try {
             $slider = Slider::findOrFail($id);
-            $oldImagePath = str_replace(asset('storage/'), '', $slider->image);
-            Storage::disk('public')->delete($oldImagePath);
+            $relativeImagePath = $slider->image;
+
+            // Delete the image file from storage
+            if (Storage::disk('public')->exists($relativeImagePath)) {
+                Storage::disk('public')->delete($relativeImagePath);
+            }
             $slider->delete();
             return response()->json([
                 'status' => true,

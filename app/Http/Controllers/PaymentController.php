@@ -2,13 +2,19 @@
 
 namespace App\Http\Controllers;
 
+use Carbon\Carbon;
+use Stripe\Stripe;
+use App\Models\User;
 use App\Models\Payment;
 use App\Models\Product;
-use App\Models\User;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use App\Models\UserPlan;
 use Stripe\PaymentIntent;
-use Stripe\Stripe;
+use App\Models\Subcription;
+use Illuminate\Http\Request;
+use App\Models\ProductPromotion;
+use Exception;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
 
 class PaymentController extends Controller
 {
@@ -58,4 +64,102 @@ class PaymentController extends Controller
         }
 
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    public function productPromotion(Request $request, $id)
+    {
+        $validator = Validator::make($request->all(), [
+            'promoted_amount' => 'required|numeric',
+            'promotion_start' => 'required',
+            'promotion_end' => 'required',
+        ]);
+        if ($validator->fails()) {
+            return response()->json(['status' => false, 'message' => $validator->errors()], 400);
+        }
+        try {
+            $product = Product::findOrFail($id);
+            $product->is_promoted = 1;
+            $product->save();
+            $promotion = ProductPromotion::create([
+                'product_id' => $id,
+                'promoted_amount' => $request->promoted_amount,
+                'promotion_start' => $request->promotion_start,
+                'promotion_end' => $request->promotion_end,
+            ]);
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Product Promoted Successfully',
+                'data' => $promotion,
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Product not found.',
+            ], 404);
+        }
+    }
+
+    public function userSubscription(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'subscription_type' => 'required|in:Monthly,Yearly',
+        ]);
+        if ($validator->fails()) {
+            return response()->json(['status' => false, 'message' => $validator->errors()], 400);
+        }
+        $userPlan = UserPlan::where('plan_type', $request->subscription_type)->first();
+
+        if (!$userPlan) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Subscription plan not found.',
+            ], 404);
+        }
+
+        $subscription_start = Carbon::now()->format('Y-m-d');
+        $subscription_end = $request->subscription_type === 'Monthly'
+        ? Carbon::now()->addMonth()->format('Y-m-d')
+        : Carbon::now()->addYear()->format('Y-m-d');
+        $user = Auth::user();
+
+        $subcription = Subcription::create([
+            'user_id' => $user->id,
+            'subscription_amount' => $userPlan->plan_price,
+            'subscription_start' => $subscription_start,
+            'subscription_end' => $subscription_end,
+        ]);
+
+        $user->subscription_plan = $userPlan->plan_type;
+        $user->product_upload = 0;
+        $user->save();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'User Subscription Successfully',
+            'subcription' => $subcription,
+            'user' => $user,
+        ]);
+    }
+
 }
