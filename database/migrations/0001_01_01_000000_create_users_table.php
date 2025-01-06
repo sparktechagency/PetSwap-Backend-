@@ -26,6 +26,8 @@ return new class extends Migration
             $table->string('facebook_id')->nullable();
             $table->string('stripe_account_id')->nullable();
             $table->enum('status', ['active', 'inactive'])->default('inactive');
+            $table->enum('subscription_plan',['Free','Monthly','Yearly'])->default('Free');
+            $table->unsignedBigInteger('product_upload')->default(0);
             $table->rememberToken();
             $table->timestamps();
             $table->softDeletes();

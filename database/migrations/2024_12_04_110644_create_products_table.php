@@ -15,7 +15,6 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->foreignId('category_id')->constrained('categories')->cascadeOnDelete();
-            // $table->foreignId('sub_category_id')->nullable()->constrained('sub_categories')->cascadeOnDelete();
             $table->json('sub_category_id');
             $table->string('title');
             $table->text('description')->nullable();
@@ -28,6 +27,7 @@ return new class extends Migration
             $table->string('weight')->nullable();
             $table->unsignedBigInteger('view_count')->default(0);
             $table->enum('status', ['Approved','Pending','Canceled'])->default('Pending');
+            $table->boolean('is_promoted')->default(false);
             $table->timestamps();
         });
     }

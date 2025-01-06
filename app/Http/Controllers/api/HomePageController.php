@@ -65,6 +65,7 @@ class HomePageController extends Controller
             ->where('status', 'Approved')
             ->where('category_id', $currentProduct->category_id)
             ->latest('view_count')
+            ->latest('is_promoted')
             ->paginate($per_page ?? 10);
 
         $products->getCollection()->transform(function ($product) {
@@ -84,6 +85,7 @@ class HomePageController extends Controller
             $products = Product::with(['wishlists', 'user:id,name,avatar'])->whereNot('user_id', Auth::user()->id)
                 ->where('status', 'Approved')
                 ->latest('view_count')
+                ->latest('is_promoted')
                 ->paginate($per_page ?? 10);
 
             $products->getCollection()->transform(function ($product) {
@@ -97,6 +99,7 @@ class HomePageController extends Controller
         if ($request->type == 'seller-collection') {
             $products = Product::with(['wishlists', 'user:id,name,avatar'])->whereNot('user_id', Auth::user()->id)
                 ->where('status', 'Approved')
+                ->latest('is_promoted')
                 ->inRandomOrder()
                 ->paginate($per_page ?? 10);
 
@@ -118,6 +121,7 @@ class HomePageController extends Controller
         if ($request->type == 'search') {
             $products = Product::with('user:id,name,avatar')
                 ->where('status', 'Approved')
+                ->latest('is_promoted')
                 ->latest('view_count');
 
             if ($request->filled('search')) {

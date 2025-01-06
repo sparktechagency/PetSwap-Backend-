@@ -244,7 +244,6 @@ class AuthController extends Controller
             return response()->json(['status' => false, 'message' => 'User not authenticated.'], 401);
         }
     }
-
     public function editProfile(Request $request)
     {
         $validator = Validator::make($request->all(), [

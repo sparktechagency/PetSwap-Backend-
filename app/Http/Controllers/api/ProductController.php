@@ -5,6 +5,7 @@ namespace App\Http\Controllers\api;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\Rating;
+use App\Models\UserPlan;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -50,31 +51,41 @@ class ProductController extends Controller
         if ($validator->fails()) {
             return response()->json(['status' => false, 'message' => $validator->errors()], 400);
         }
-        $imagePaths = [];
-        if ($request->has('images')) {
-            foreach ($request->file('images') as $image) {
-                $path = $image->store('product', 'public');
-                $imagePaths[] = asset('storage/' . $path);
+        $user = Auth::user();
+        $current_plan = UserPlan::where('plan_type', $user->subscription_plan)->first();
+        if ($current_plan->max_can_upload > $user->product_upload) {
+            $imagePaths = [];
+            if ($request->has('images')) {
+                foreach ($request->file('images') as $image) {
+                    $path = $image->store('product', 'public');
+                    $imagePaths[] = asset('storage/' . $path);
+                }
             }
-        }
-        $product = Product::create([
-            'user_id' => Auth::user()->id,
-            'category_id' => $request->category_id,
-            'sub_category_id' => $request->sub_category_ids,
-            'title' => $request->title,
-            'description' => $request->description,
-            'images' => json_encode($imagePaths),
-            'price' => $request->price,
-            'brand' => $request->brand,
-            'condition' => $request->condition,
-            'is_food' => $request->is_food,
-            'weight' => $request->weight,
-        ]);
+            $product = Product::create([
+                'user_id' => Auth::user()->id,
+                'category_id' => $request->category_id,
+                'sub_category_id' => $request->sub_category_ids,
+                'title' => $request->title,
+                'description' => $request->description,
+                'images' => json_encode($imagePaths),
+                'price' => $request->price,
+                'brand' => $request->brand,
+                'condition' => $request->condition,
+                'is_food' => $request->is_food,
+                'weight' => $request->weight,
+            ]);
 
+            $user->product_upload += 1;
+            $user->save();
+            return response()->json([
+                'status' => true,
+                'message' => "Product added successfully.",
+                'data' => $product,
+            ], 200);
+        }
         return response()->json([
             'status' => true,
-            'message' => "Product added successfully.",
-            'data' => $product,
+            'message' => "You have exceeded the plan's capacity. Please Upgread your plan",
         ], 200);
     }
 

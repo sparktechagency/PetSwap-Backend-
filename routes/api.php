@@ -18,6 +18,8 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OfferAskingController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\PromotionController;
+use App\Http\Controllers\SubcriptionPlanController;
 use Illuminate\Support\Facades\Route;
 
 Route::group(['middleware' => 'api'], function ($router) {
@@ -85,7 +87,7 @@ Route::group(['middleware' => 'api'], function ($router) {
 
             //order
             Route::get('order', [OrderController::class, 'order'])->name('order');
-            Route::get('order/{id}',[OrderController::class,'order_details'])->name('orderDetails');
+            Route::get('order/{id}', [OrderController::class, 'order_details'])->name('orderDetails');
 
             //helpcenter
             Route::get('help-center', [HelpCenterController::class, 'index']);
@@ -96,6 +98,11 @@ Route::group(['middleware' => 'api'], function ($router) {
             //settings
             Route::get('setting', [SettingController::class, 'getSetting'])->name('setting.get');
 
+            //product promotion
+            Route::post('product-promotion/{id}', [PromotionController::class, 'productPromotion'])->name('productPromotion');
+
+            //subcription plan
+            Route::get('subcription-plan', [SubcriptionPlanController::class, 'subcriptionPlan']);
         });
 
         // admin routes
@@ -125,16 +132,16 @@ Route::group(['middleware' => 'api'], function ($router) {
             Route::post('setting', [SettingController::class, 'settingUpdate'])->name('setting.update');
 
             // manage users
-            Route::get('manage-user',[UserController::class,'index']);
-            Route::get('user-details/{id}',[UserController::class,'userDetails']);
-            Route::get('user-statistics/{id}',[UserController::class,'userStatistics']);
+            Route::get('manage-user', [UserController::class, 'index']);
+            Route::get('user-details/{id}', [UserController::class, 'userDetails']);
+            Route::get('user-statistics/{id}', [UserController::class, 'userStatistics']);
 
             // transactions
-            Route::get('transactions',[TransactionController::class,'transaction']);
+            Route::get('transactions', [TransactionController::class, 'transaction']);
 
             // dashboard route
-            Route::get('overview',[DashboardController::class,'overview']);
-            Route::get('statistics',[DashboardController::class,'statistics']);
+            Route::get('overview', [DashboardController::class, 'overview']);
+            Route::get('statistics', [DashboardController::class, 'statistics']);
 
         });
     });

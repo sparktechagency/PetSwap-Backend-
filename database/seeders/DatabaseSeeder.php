@@ -22,6 +22,7 @@ class DatabaseSeeder extends Seeder
             WishlistSeeder::class,
             RatingSeeder::class,
             SettingSeeder::class,
+            UserPlanSeeder::class,
         ]);
     }
 }
