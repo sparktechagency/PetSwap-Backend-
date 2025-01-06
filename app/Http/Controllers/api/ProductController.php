@@ -26,7 +26,14 @@ class ProductController extends Controller
         $products = $products->latest('id')->paginate($per_page);
         $formattedProducts = $products->getCollection()->map(function ($product) {
             $product->images = json_decode($product->images);
-            // $product->sub_category_id = json_decode($product->sub_category_id);
+            if (is_array($product->images)) {
+                $product->images = array_map(function ($image) {
+                    return asset('storage/' . $image);
+                }, $product->images);
+            } else {
+                $product->images = [];
+            }
+
             return $product;
         });
         $products->setCollection($formattedProducts);
@@ -37,15 +44,6 @@ class ProductController extends Controller
         ], 200);
     }
 
-
-
-
-
-
-
-
-
-    
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -62,11 +60,10 @@ class ProductController extends Controller
         $user = Auth::user();
         $current_plan = UserPlan::where('plan_type', $user->subscription_plan)->first();
         if ($current_plan->max_can_upload > $user->product_upload) {
-            $imagePaths = [];
             if ($request->has('images')) {
                 foreach ($request->file('images') as $image) {
                     $path = $image->store('product', 'public');
-                    $imagePaths[] = asset('storage/' . $path);
+                    $imagePaths[] = $path;
                 }
             }
             $product = Product::create([
@@ -96,21 +93,6 @@ class ProductController extends Controller
             'message' => "You have exceeded the plan's capacity. Please Upgread your plan",
         ], 200);
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     public function update(Request $request, $id)
     {
@@ -142,7 +124,7 @@ class ProductController extends Controller
                 $imagePaths = [];
                 foreach ($request->file('images') as $image) {
                     $path = $image->store('product', 'public');
-                    $imagePaths[] = asset('storage/' . $path);
+                    $imagePaths[] = $path;
                 }
             }
 
@@ -186,7 +168,6 @@ class ProductController extends Controller
                         Storage::disk('public')->delete($oldPath);
                     }
                 }
-
             }
             $product->delete();
             return response()->json([
