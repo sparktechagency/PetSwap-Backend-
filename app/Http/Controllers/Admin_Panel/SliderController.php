@@ -18,7 +18,7 @@ class SliderController extends Controller
 
         $sliders = Slider::paginate($per_page);
         $sliders->getCollection()->transform(function ($slider) {
-            $slider->image = asset('storage/' . $slider->image);
+            $slider->image = asset('uploads/' . $slider->image);
             return $slider;
         });
 
@@ -39,11 +39,15 @@ class SliderController extends Controller
         }
 
         if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('sliders', 'public');
+            $photo_location = 'sliders/';
+            $uploaded_photo = $request->file('image');
+            $new_photo_name = time() . '.' . $uploaded_photo->getClientOriginalExtension();
+            $new_photo_location = $photo_location . $new_photo_name;
+            $uploaded_photo->storeAs('public/' . $photo_location, $new_photo_name);
         }
 
         $slider = Slider::create([
-            'image' => $path,
+            'image' => $new_photo_location,
         ]);
 
         return response()->json([
@@ -75,6 +79,28 @@ class SliderController extends Controller
                 // Store the new image
                 $path = $request->file('image')->store('sliders', 'public');
                 $slider->image =$path;
+
+
+                $user = User::findOrFail($id);
+                if ($user->profile_photo != 'default_profile.jpg') {
+                    //delete old photo
+                    $photo_location = 'public/uploads/profile_photo/';
+                    $old_photo_location = $photo_location . $user->profile_photo;
+                    unlink(base_path($old_photo_location));
+                }
+                if ($request->hasFile('image')) {
+                    $photo_location = 'sliders/';
+                    $uploaded_photo = $request->file('image');
+                    $new_photo_name = time() . '.' . $uploaded_photo->getClientOriginalExtension();
+                    $new_photo_location = $photo_location . $new_photo_name;
+                    $uploaded_photo->storeAs('public/' . $photo_location, $new_photo_name);
+                }
+
+                $slider = Slider::create([
+                    'image' => $new_photo_location,
+                ]);
+
+
             }
             $slider->save();
 

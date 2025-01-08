@@ -45,7 +45,7 @@ class AuthController extends Controller
 
         Mail::to($request->email)->send(new OtpMail($otp));
 
-        return response()->json(['status' => true, 'message' => 'OTP sent to your registered email.'], 201);
+        return response()->json(['status' => true, 'message' => 'OTP sent to your registered email.','data'=>$user], 201);
     }
 
     public function login(Request $request)
@@ -234,11 +234,11 @@ class AuthController extends Controller
             if (!$user) {
                 return response()->json(['status' => false, 'message' => 'Invalid token.'], 401);
             }
-            if ($user->avatar) {
-                $user->avatar = asset('storage/' . $user->avatar);
-            } else {
-                $user->avatar = asset('storage/user/default_avatar.jpeg');
-            }
+            // if ($user->avatar) {
+            //     $user->avatar = asset('storage/' . $user->avatar);
+            // } else {
+            //     $user->avatar = asset('storage/user/default_avatar.jpeg');
+            // }
             return response()->json(['status' => true, 'data' => $user], 200);
         } catch (Exception $e) {
             return response()->json(['status' => false, 'message' => 'User not authenticated.'], 401);
