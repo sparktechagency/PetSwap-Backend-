@@ -10,7 +10,6 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
 class ProductController extends Controller
@@ -63,7 +62,7 @@ class ProductController extends Controller
 
             if ($request->hasFile('images')) {
                 foreach ($request->file('images') as $image) {
-                    $final_name = time() . uniqid() .'.' . $image->extension();
+                    $final_name = time() . uniqid() . '.' . $image->extension();
                     $image->move(public_path('uploads/product'), $final_name);
                     $image_path = 'product/' . $final_name;
                     $imagePaths[] = $image_path;
@@ -115,26 +114,29 @@ class ProductController extends Controller
 
         try {
             $product = Product::find($id);
-            $imagePaths = json_decode($product->images, true) ?? [];
-            return $imagePaths;
-            if ($request->hasFile('images')) {
-                foreach ($imagePaths as $path) {
-                    $photo_location = public_path('uploads/');
-                    $old_photo_location = $photo_location . $path;
-                    if (file_exists($old_photo_location)) {
-                        unlink($old_photo_location);
-                    }
+            $existingImagePaths = json_decode($product->images, true) ?? [];
+
+            foreach ($existingImagePaths as $oldPath) {
+                $oldFile = public_path('uploads/' . $oldPath);
+                if (file_exists($oldFile)) {
+                    unlink($oldFile);
                 }
             }
-
-
+            $newImagePaths = [];
+            if ($request->hasFile('images')) {
+                foreach ($request->file('images') as $image) {
+                    $final_name = time() . uniqid() . '.' . $image->extension();
+                    $image->move(public_path('uploads/product'), $final_name);
+                    $newImagePaths[] = 'product/' . $final_name;
+                }
+            }
 
             $product->update([
                 'category_id' => $request->category_id ?? $product->category_id,
                 'sub_category_id' => $request->sub_category_ids,
                 'title' => $request->title ?? $product->title,
                 'description' => $request->description ?? $product->description,
-                'images' => json_encode($imagePaths),
+                'images' => json_encode($newImagePaths),
                 'price' => $request->price ?? $product->price,
                 'brand' => $request->brand ?? $product->brand,
                 'condition' => $request->condition ?? $product->condition,
@@ -160,14 +162,12 @@ class ProductController extends Controller
     {
         try {
             $product = Product::findOrFail($id);
-            $imagePaths = json_decode($product->images, true) ?? [];
-            if ($imagePaths) {
-                // delete old images
-                foreach ($imagePaths as $path) {
-                    $oldPath = str_replace(asset('storage/'), '', $path);
-                    if (Storage::disk('public')->exists($oldPath)) {
-                        Storage::disk('public')->delete($oldPath);
-                    }
+            $existingImagePaths = json_decode($product->images, true) ?? [];
+
+            foreach ($existingImagePaths as $oldPath) {
+                $oldFile = public_path('uploads/' . $oldPath);
+                if (file_exists($oldFile)) {
+                    unlink($oldFile);
                 }
             }
             $product->delete();
@@ -223,7 +223,7 @@ class ProductController extends Controller
                 'title' => $product->title,
                 'description' => $product->description,
                 'images' => array_map(function ($image) {
-                    return asset('uploads/'.$image);
+                    return asset('uploads/' . $image);
                 }, $product->images),
                 'price' => $product->price,
                 'platform_fee' => $product->platform_fee,

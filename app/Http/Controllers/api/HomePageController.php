@@ -112,7 +112,7 @@ class HomePageController extends Controller
                 $product->user = [
                     'id' => $product->user->id,
                     'name' => $product->user->name,
-                    'avatar' => asset('storage/' . $product->user->avatar),
+                    'avatar' => asset('uploads/user/' . $product->user->avatar),
                 ];
                 return $product;
             });
