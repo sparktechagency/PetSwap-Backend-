@@ -60,12 +60,16 @@ class ProductController extends Controller
         $user = Auth::user();
         $current_plan = UserPlan::where('plan_type', $user->subscription_plan)->first();
         if ($current_plan->max_can_upload > $user->product_upload) {
-            if ($request->has('images')) {
+
+            if ($request->hasFile('images')) {
                 foreach ($request->file('images') as $image) {
-                    $path = $image->store('product', 'public');
-                    $imagePaths[] = $path;
+                    $final_name = time() . uniqid() .'.' . $image->extension();
+                    $image->move(public_path('uploads/product'), $final_name);
+                    $image_path = 'product/' . $final_name;
+                    $imagePaths[] = $image_path;
                 }
             }
+
             $product = Product::create([
                 'user_id' => Auth::user()->id,
                 'category_id' => $request->category_id,
@@ -108,25 +112,22 @@ class ProductController extends Controller
         if ($validator->fails()) {
             return response()->json(['status' => false, 'message' => $validator->errors()], 400);
         }
-        try {
-            $product = Product::findOrFail($id);
-            $imagePaths = json_decode($product->images, true) ?? [];
 
-            if ($request->has('images')) {
-                // delete old images
+        try {
+            $product = Product::find($id);
+            $imagePaths = json_decode($product->images, true) ?? [];
+            return $imagePaths;
+            if ($request->hasFile('images')) {
                 foreach ($imagePaths as $path) {
-                    $oldPath = str_replace(asset('storage/'), '', $path);
-                    if (Storage::disk('public')->exists($oldPath)) {
-                        Storage::disk('public')->delete($oldPath);
+                    $photo_location = public_path('uploads/');
+                    $old_photo_location = $photo_location . $path;
+                    if (file_exists($old_photo_location)) {
+                        unlink($old_photo_location);
                     }
                 }
-                // Save new images
-                $imagePaths = [];
-                foreach ($request->file('images') as $image) {
-                    $path = $image->store('product', 'public');
-                    $imagePaths[] = $path;
-                }
             }
+
+
 
             $product->update([
                 'category_id' => $request->category_id ?? $product->category_id,
@@ -222,7 +223,7 @@ class ProductController extends Controller
                 'title' => $product->title,
                 'description' => $product->description,
                 'images' => array_map(function ($image) {
-                    return url($image);
+                    return asset('uploads/'.$image);
                 }, $product->images),
                 'price' => $product->price,
                 'platform_fee' => $product->platform_fee,

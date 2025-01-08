@@ -10,7 +10,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
@@ -45,7 +44,7 @@ class AuthController extends Controller
 
         Mail::to($request->email)->send(new OtpMail($otp));
 
-        return response()->json(['status' => true, 'message' => 'OTP sent to your registered email.','data'=>$user], 201);
+        return response()->json(['status' => true, 'message' => 'OTP sent to your registered email.', 'data' => $user], 201);
     }
 
     public function login(Request $request)
@@ -189,15 +188,15 @@ class AuthController extends Controller
 
         $user = User::where('email', $request->email)->where('otp', $request->otp)->first();
         if ($user->otp === $request->otp && $user->otp_expires_at >= now()) {
-            if($user->email_verified_at != null){
+            if ($user->email_verified_at != null) {
                 $user->otp = null;
                 $user->otp_expires_at = null;
                 $user->save();
-            }else{
+            } else {
                 $user->otp = null;
                 $user->otp_expires_at = null;
                 $user->email_verified_at = now();
-                $user->status='active';
+                $user->status = 'active';
                 $user->save();
             }
             $token = Auth::login($user);
@@ -231,6 +230,7 @@ class AuthController extends Controller
     {
         try {
             $user = auth()->user();
+            $user->avatar = asset('uploads/' . $user->avatar);
             if (!$user) {
                 return response()->json(['status' => false, 'message' => 'Invalid token.'], 401);
             }
@@ -250,7 +250,7 @@ class AuthController extends Controller
             'name' => 'nullable|string|max:255',
             'address' => 'nullable|string|max:255',
             'image' => 'sometimes|image|mimes:png,jpg,jpeg',
-            'email'=>'nullable|email|max:255',
+            'email' => 'nullable|email|max:255',
         ]);
 
         if ($validator->fails()) {
@@ -263,27 +263,23 @@ class AuthController extends Controller
         $user->email = $request->email ?? $user->email;
 
         if ($request->hasFile('image')) {
-            if ($user->avatar && $user->avatar !== 'user/default_avatar.png') {
-                $existing_image_path = str_replace('storage/', '', $user->avatar);
-                Storage::disk('public')->delete($existing_image_path);
+            $photo_location = public_path('uploads/');
+            $old_photo_location = $photo_location . $user->avatar;
+            if (file_exists($old_photo_location)) {
+                unlink($old_photo_location);
             }
-            $uploaded_image = $request->file('image');
-            $final_name = time() . '.' . $uploaded_image->extension();
-            $path = $uploaded_image->storeAs('user', $final_name, 'public');
 
-            $user->avatar = 'user/' . $final_name;
-        } else {
-            if (!$user->avatar) {
-                $user->avatar = 'user/default_avatar.jpeg';
-            }
+            $final_name = time() . '.' . $request->image->extension();
+            $request->image->move(public_path('uploads/user'), $final_name);
+            $image_path = 'user/' . $final_name;
         }
-
+        $user->avatar = $image_path;
         $user->save();
 
         return response()->json([
             'status' => true,
             'message' => 'Profile updated successfully',
-            'data'=>$user,
+            'data' => $user,
         ], 200);
     }
 
@@ -322,7 +318,7 @@ class AuthController extends Controller
     {
         return [
             'access_token' => $token,
-            'user'=>Auth::user(),
+            'user' => Auth::user(),
             'token_type' => 'bearer',
             'expires_in' => auth()->factory()->getTTL() * 60,
         ];
