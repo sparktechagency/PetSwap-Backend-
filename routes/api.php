@@ -14,11 +14,13 @@ use App\Http\Controllers\api\ProductController;
 use App\Http\Controllers\api\RatingController;
 use App\Http\Controllers\Api\SettingController;
 use App\Http\Controllers\api\WishlistController;
+use App\Http\Controllers\Backend\FeeController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OfferAskingController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PromotionController;
+use App\Http\Controllers\StripeController;
 use App\Http\Controllers\SubcriptionPlanController;
 use Illuminate\Support\Facades\Route;
 
@@ -105,6 +107,13 @@ Route::group(['middleware' => 'api'], function ($router) {
             Route::get('subcription-plan', [SubcriptionPlanController::class, 'subcriptionPlan']);
             Route::post('subscription', [PaymentController::class, 'userSubscription']);
 
+            // system see routes
+            Route::get('system-fee', [FeeController::class, 'show']);
+
+
+            //stripe account
+            Route::post('create-connected-account',[StripeController::class,'createStripeConnectedAccount']);
+            Route::post('buy-product-intent',[StripeController::class,'buyProductIntent']);
         });
 
         // admin routes

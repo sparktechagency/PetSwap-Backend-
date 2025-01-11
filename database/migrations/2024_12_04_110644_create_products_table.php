@@ -21,6 +21,7 @@ return new class extends Migration
             $table->json('images')->nullable();
             $table->float('price');
             $table->float('platform_fee')->nullable();
+            $table->float('buyer_protection_fee')->nullable();
             $table->string('brand')->nullable();
             $table->string('condition')->nullable();
             $table->boolean('is_food')->default(false);

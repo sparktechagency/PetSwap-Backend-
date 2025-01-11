@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Fee;
 use App\Models\Product;
 use App\Models\Rating;
 use App\Models\UserPlan;
@@ -130,7 +131,6 @@ class ProductController extends Controller
                     $newImagePaths[] = 'product/' . $final_name;
                 }
             }
-
             $product->update([
                 'category_id' => $request->category_id ?? $product->category_id,
                 'sub_category_id' => $request->sub_category_ids,
@@ -188,7 +188,7 @@ class ProductController extends Controller
     public function show(Request $request, $id)
     {
         try {
-            $product = Product::with('user:id,name,email,avatar')->where('id', $id)->firstOrFail();
+            $product = Product::with('user:id,name,email,avatar,address')->where('id', $id)->firstOrFail();
             $product->images = json_decode($product->images, true) ?? [];
 
             // Get the latest rating and count ratings
@@ -214,7 +214,9 @@ class ProductController extends Controller
                 ] : null,
             ] : null;
 
-            // Prepare the product response
+            $fee = Fee::first();
+            $calculate_buyer_protection_fee = ($product->price * $fee->buyer_protection_fee) / 100;
+            $price_with_buyer_protection_fee= $calculate_buyer_protection_fee+$product->price;
             $response = [
                 'id' => $product->id,
                 'user_id' => $product->user_id,
@@ -226,16 +228,23 @@ class ProductController extends Controller
                     return asset('uploads/' . $image);
                 }, $product->images),
                 'price' => $product->price,
-                'platform_fee' => $product->platform_fee,
                 'brand' => $product->brand,
                 'condition' => $product->condition,
                 'is_food' => $product->is_food,
                 'weight' => $product->weight,
+                'price_with_buyer_protection_fee'=>$price_with_buyer_protection_fee,
+                'platform_fee'=>$fee->platform_fee,
                 'view_count' => $product->view_count,
                 'status' => $product->status,
                 'created_at' => $product->created_at,
                 'updated_at' => $product->updated_at,
                 'rating' => $rating_data, // Include the rating data or null
+                'user'=>[
+                    'name'=>$product->user->name,
+                    'email'=>$product->user->email,
+                    'address'=>$product->user->address,
+                    'avatar'=>$product->user->avatar,
+                ]
             ];
 
             return response()->json([

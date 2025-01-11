@@ -16,11 +16,12 @@ return new class extends Migration
             $table->foreignId('buyer_id')->constrained('users')->cascadeOnDelete();
             $table->foreignId('seller_id')->constrained('users')->cascadeOnDelete();
             $table->foreignId('product_id')->constrained('products')->cascadeOnDelete();
-            $table->string('amount');
-            $table->string('seller_amount');
-            $table->string('platform_fee');
-            $table->string('status');
-            $table->string('stripe_payment_id');
+            $table->float('amount',8, 2);
+            $table->string('currency')->default('USD');
+            $table->float('platform_fee',8,2)->nullable();
+            $table->float('buyer_protection_fee',8,2)->nullable();
+            $table->string('status')->default('pending');
+            $table->string('stripe_payment_id')->nullable();
             $table->timestamps();
         });
     }

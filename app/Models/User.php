@@ -66,4 +66,9 @@ class User extends Authenticatable implements JWTSubject
     public function wishlist(){
         return $this->hasMany(Wishlist::class);
     }
+
+
+    public function getAvatarAttribute($avatar){
+        return asset('uploads/'.$avatar);
+    }
 }
