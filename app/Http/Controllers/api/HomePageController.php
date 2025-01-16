@@ -45,7 +45,7 @@ class HomePageController extends Controller
                 return asset('uploads/' . $image);
             }, json_decode($product->images, true) ?? []);
             $calculate_buyer_protection_fee = ($product->price * $fee->buyer_protection_fee) / 100;
-            $product->price_with_buyer_protection_fee= $calculate_buyer_protection_fee+$product->price;
+            $product->price_with_buyer_protection_fee= round($calculate_buyer_protection_fee+$product->price,2);
             $product->wishlist_count = $product->wishlists->count();
             unset($product->wishlists);
 
@@ -72,7 +72,7 @@ class HomePageController extends Controller
                     return asset('uploads/' . $image);
                 }, $product->images);
                 $calculate_buyer_protection_fee = ($product->price * $fee->buyer_protection_fee) / 100;
-                $product->price_with_buyer_protection_fee= $calculate_buyer_protection_fee+$product->price;
+                $product->price_with_buyer_protection_fee= round($calculate_buyer_protection_fee+$product->price,2);
                 $product->wishlist_count = $product->wishlists->count();
                 unset($product->wishlists);
                 return $product;
@@ -93,7 +93,7 @@ class HomePageController extends Controller
                     return asset('uploads/' . $image);
                 }, $product->images);
                 $calculate_buyer_protection_fee = ($product->price * $fee->buyer_protection_fee) / 100;
-                $product->price_with_buyer_protection_fee= $calculate_buyer_protection_fee+$product->price;
+                $product->price_with_buyer_protection_fee= round($calculate_buyer_protection_fee+$product->price,2);
                 $product->wishlist_count = $product->wishlists->count();
                 unset($product->wishlists);
 
@@ -137,7 +137,7 @@ class HomePageController extends Controller
                     return asset('uploads/' . $image);
                 }, $product->images);
                 $calculate_buyer_protection_fee = ($product->price * $fee->buyer_protection_fee) / 100;
-                $product->price_with_buyer_protection_fee= $calculate_buyer_protection_fee+$product->price;
+                $product->price_with_buyer_protection_fee= round($calculate_buyer_protection_fee+$product->price,2);
                 $product->wishlist = $product->wishlists->contains('user_id', $userId);
                 $product->wishlist_count = $product->wishlists->count();
                 unset($product->wishlists);

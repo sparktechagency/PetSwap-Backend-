@@ -17,6 +17,7 @@ class ProductController extends Controller
 {
     public function index(Request $request)
     {
+        $fee = Fee::first();
         $per_page = $request->per_page ?? 10;
         $products = Product::with('user:id,name,email,avatar')->withCount('wishlists')->where('title', 'LIKE', '%' . $request->search . '%');
         if (Auth::user()->role == 'USER') {
@@ -24,16 +25,17 @@ class ProductController extends Controller
         }
 
         $products = $products->latest('id')->paginate($per_page);
-        $formattedProducts = $products->getCollection()->map(function ($product) {
+        $formattedProducts = $products->getCollection()->map(function ($product) use($fee) {
             $product->images = json_decode($product->images);
             if (is_array($product->images)) {
                 $product->images = array_map(function ($image) {
-                    return asset('storage/' . $image);
+                    return asset('uploads/' . $image);
                 }, $product->images);
             } else {
                 $product->images = [];
             }
-
+            $calculate_buyer_protection_fee = ($product->price * $fee->buyer_protection_fee) / 100;
+            $product->price_with_buyer_protection_fee= round($calculate_buyer_protection_fee+$product->price,2);
             return $product;
         });
         $products->setCollection($formattedProducts);
@@ -216,7 +218,7 @@ class ProductController extends Controller
 
             $fee = Fee::first();
             $calculate_buyer_protection_fee = ($product->price * $fee->buyer_protection_fee) / 100;
-            $price_with_buyer_protection_fee= $calculate_buyer_protection_fee+$product->price;
+            $price_with_buyer_protection_fee = round($calculate_buyer_protection_fee + $product->price, 2);
             $response = [
                 'id' => $product->id,
                 'user_id' => $product->user_id,
@@ -232,19 +234,19 @@ class ProductController extends Controller
                 'condition' => $product->condition,
                 'is_food' => $product->is_food,
                 'weight' => $product->weight,
-                'price_with_buyer_protection_fee'=>$price_with_buyer_protection_fee,
-                'platform_fee'=>$fee->platform_fee,
+                'price_with_buyer_protection_fee' => $price_with_buyer_protection_fee,
+                'platform_fee' => $fee->platform_fee,
                 'view_count' => $product->view_count,
                 'status' => $product->status,
                 'created_at' => $product->created_at,
                 'updated_at' => $product->updated_at,
                 'rating' => $rating_data, // Include the rating data or null
-                'user'=>[
-                    'name'=>$product->user->name,
-                    'email'=>$product->user->email,
-                    'address'=>$product->user->address,
-                    'avatar'=>$product->user->avatar,
-                ]
+                'user' => [
+                    'name' => $product->user->name,
+                    'email' => $product->user->email,
+                    'address' => $product->user->address,
+                    'avatar' => $product->user->avatar,
+                ],
             ];
 
             return response()->json([

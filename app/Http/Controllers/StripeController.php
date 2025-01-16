@@ -2,15 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use Exception;
-use Stripe\Stripe;
-use App\Models\Fee;
-use Stripe\Account;
+use App\Models\Product;
 use App\Models\User;
-use Stripe\AccountLink;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use Stripe\Account;
+use Stripe\AccountLink;
+use Stripe\PaymentIntent;
+use Stripe\Stripe;
 
 class StripeController extends Controller
 {
@@ -58,57 +59,43 @@ class StripeController extends Controller
     public function buyProductIntent(Request $request)
     {
         $request->validate([
-            'amount' => 'required|integer|min:1',
+            'total_price' => 'required|integer|min:1',
+            'product_id' => 'required|integer',
         ]);
-        // Stripe::setApiKey(env('STRIPE_SECRET'));
+        $total_price = $request->total_price;
+        $product = Product::with('user')
+            ->where('id', $request->product_id)
+            ->first();
 
-        $fee = Fee::first();
-        $platformFee = $fee->platform_fee;
-        $buyer_protection_fee = $fee->buyer_protection_fee;
-        $amount = $request->amount;
+        $product_price = $product->price;
+        $platformFee=$total_price-$product_price;
 
-        $remaining_after_platform_fee = $amount - $platformFee;
-        $calculate_buyer_protection_fee = ($remaining_after_platform_fee * $buyer_protection_fee) / 100;
-        $final_amount_for_transfer = $remaining_after_platform_fee - $calculate_buyer_protection_fee;
-        $final_amount_for_admin = $calculate_buyer_protection_fee + $platformFee;
+        $stripeAccountId = $product->user->stripe_account_id;
+        if (!$stripeAccountId) {
+            return response()->json([
+                'status' => false,
+                'message' => 'This use doesnot have any stripe account.',
+            ], 404);
+        }
 
-        return [
-            'total_payment' => $amount,
-            'platform_fee' => $platformFee,
-            'total percent' => $calculate_buyer_protection_fee,
-            'amount for transfer seller ' => $final_amount_for_transfer,
-            'amount for admin get' => $final_amount_for_admin,
-        ];
-
-
-
-
-
-
-
-
-
-
-
-
-
+        Stripe::setApiKey(env('STRIPE_SECRET'));
         try {
-            // Create a PaymentIntent
             $paymentIntent = PaymentIntent::create([
-                'amount' => $amount,
+                'amount' => (int)($total_price * 100),
                 'currency' => 'usd',
                 'payment_method_types' => ['card'],
                 'transfer_data' => [
-                    'destination' => $vendor->stripe_account_id,
+                    'destination' => $stripeAccountId,
                 ],
-                'application_fee_amount' => $platformFee,
+                'application_fee_amount' => (int)($platformFee * 100),
             ]);
+
 
             return response()->json([
                 'client_secret' => $paymentIntent->client_secret,
                 'payment_intent_id' => $paymentIntent->id,
             ]);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }

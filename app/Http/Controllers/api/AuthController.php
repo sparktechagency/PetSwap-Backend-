@@ -230,7 +230,6 @@ class AuthController extends Controller
     {
         try {
             $user = auth()->user();
-            $user->avatar = asset('uploads/' . $user->avatar);
             if (!$user) {
                 return response()->json(['status' => false, 'message' => 'Invalid token.'], 401);
             }
@@ -272,8 +271,8 @@ class AuthController extends Controller
             $final_name = time() . '.' . $request->image->extension();
             $request->image->move(public_path('uploads/user'), $final_name);
             $image_path = 'user/' . $final_name;
+            $user->avatar = $image_path;
         }
-        $user->avatar = $image_path;
         $user->save();
 
         return response()->json([

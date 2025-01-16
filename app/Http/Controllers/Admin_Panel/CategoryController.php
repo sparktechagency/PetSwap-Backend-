@@ -14,6 +14,7 @@ class CategoryController extends Controller
 {
     public function index()
     {
+
         $categories = Category::with('subcategories')->select('id', 'icon', 'name', 'created_at')->get();
         foreach ($categories as $category) {
             $category->icon = asset('uploads/' . $category->icon);
