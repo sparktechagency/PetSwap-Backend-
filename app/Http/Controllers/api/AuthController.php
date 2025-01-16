@@ -9,6 +9,7 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
@@ -256,24 +257,32 @@ class AuthController extends Controller
             return response()->json(['status' => false, 'message' => $validator->errors()], 400);
         }
 
-        $user = Auth::user();
-        $user->name = $request->name ?? $user->name;
-        $user->address = $request->address ?? $user->address;
-        $user->email = $request->email ?? $user->email;
+        try {
+            $user = Auth::user();
+            $user->name = $request->name ?? $user->name;
+            $user->address = $request->address ?? $user->address;
+            $user->email = $request->email ?? $user->email;
 
-        if ($request->hasFile('image')) {
-            $photo_location = public_path('uploads/');
-            $old_photo_location = $photo_location . $user->avatar;
-            if (file_exists($old_photo_location)) {
-                unlink($old_photo_location);
+            if ($request->hasFile('image')) {
+                $photo_location = public_path('uploads/');
+                $old_photo_location = $photo_location . $user->avatar;
+                if (file_exists($old_photo_location)) {
+                    unlink($old_photo_location);
+                }
+
+                $final_name = time() . '.' . $request->image->extension();
+                $request->image->move(public_path('uploads/user'), $final_name);
+                $image_path = 'user/' . $final_name;
+                $user->avatar = $image_path;
             }
-
-            $final_name = time() . '.' . $request->image->extension();
-            $request->image->move(public_path('uploads/user'), $final_name);
-            $image_path = 'user/' . $final_name;
-            $user->avatar = $image_path;
+            $user->save();
+        } catch (Exception $e) {
+            Log::error($e->getMessage());
+            return response()->json([
+                'status' => false,
+                'message' => 'Profile is not updated. Please check your info.',
+            ], 404);
         }
-        $user->save();
 
         return response()->json([
             'status' => true,

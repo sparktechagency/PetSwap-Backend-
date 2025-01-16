@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Models\Product;
@@ -27,12 +26,12 @@ class StripeController extends Controller
         Stripe::setApiKey(env('STRIPE_SECRET'));
         try {
             $account = Account::create([
-                'type' => 'standard', // Can also be 'express' based on your needs
-                'country' => 'US',
-                'email' => $user->email,
+                'type'         => 'express',
+                'country'      => 'US',
+                'email'        => $user->email,
                 'capabilities' => [
-                    'transfers' => ['requested' => true],
                     'card_payments' => ['requested' => true],
+                    'transfers'     => ['requested' => true],
                 ],
             ]);
 
@@ -40,14 +39,14 @@ class StripeController extends Controller
             $user->save();
 
             $accountLink = AccountLink::create([
-                'account' => $account->id,
+                'account'     => $account->id,
                 'refresh_url' => url('/vendor/reauth'),
-                'return_url' => url('/vendor/dashboard'),
-                'type' => 'account_onboarding',
+                'return_url'  => url('/vendor/dashboard'),
+                'type'        => 'account_onboarding',
             ]);
 
             return response()->json([
-                'message' => 'Stripe Connect account created successfully',
+                'message'        => 'Stripe Connect account created successfully',
                 'onboarding_url' => $accountLink->url,
             ]);
         } catch (Exception $e) {
@@ -60,20 +59,20 @@ class StripeController extends Controller
     {
         $request->validate([
             'total_price' => 'required|integer|min:1',
-            'product_id' => 'required|integer',
+            'product_id'  => 'required|integer',
         ]);
         $total_price = $request->total_price;
-        $product = Product::with('user')
+        $product     = Product::with('user')
             ->where('id', $request->product_id)
             ->first();
 
         $product_price = $product->price;
-        $platformFee=$total_price-$product_price;
+        $platformFee   = $total_price - $product_price;
 
         $stripeAccountId = $product->user->stripe_account_id;
-        if (!$stripeAccountId) {
+        if (! $stripeAccountId) {
             return response()->json([
-                'status' => false,
+                'status'  => false,
                 'message' => 'This use doesnot have any stripe account.',
             ], 404);
         }
@@ -81,18 +80,17 @@ class StripeController extends Controller
         Stripe::setApiKey(env('STRIPE_SECRET'));
         try {
             $paymentIntent = PaymentIntent::create([
-                'amount' => (int)($total_price * 100),
-                'currency' => 'usd',
-                'payment_method_types' => ['card'],
-                'transfer_data' => [
+                'amount'                 => (int) ($total_price * 100),
+                'currency'               => 'usd',
+                'payment_method_types'   => ['card'],
+                'transfer_data'          => [
                     'destination' => $stripeAccountId,
                 ],
-                'application_fee_amount' => (int)($platformFee * 100),
+                'application_fee_amount' => (int) ($platformFee * 100),
             ]);
 
-
             return response()->json([
-                'client_secret' => $paymentIntent->client_secret,
+                'client_secret'     => $paymentIntent->client_secret,
                 'payment_intent_id' => $paymentIntent->id,
             ]);
         } catch (Exception $e) {
