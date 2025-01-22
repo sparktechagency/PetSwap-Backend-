@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->float('platform_fee',8,2)->default(2);
             $table->float('buyer_protection_fee',8,2)->default(5);
+            $table->float('per_day_promotion_amount',8,2)->default(2);
             $table->timestamps();
         });
     }

@@ -57,10 +57,13 @@ class StripeController extends Controller
 
     public function buyProductIntent(Request $request)
     {
-        $request->validate([
-            'total_price' => 'required|integer|min:1',
+        $validator = Validator::make($request->all(), [
+            'total_price' => 'required|min:1',
             'product_id'  => 'required|integer',
         ]);
+        if ($validator->fails()) {
+            return response()->json(['status' => false, 'message' => $validator->errors()], 400);
+        }
         $total_price = $request->total_price;
         $product     = Product::with('user')
             ->where('id', $request->product_id)
@@ -82,7 +85,8 @@ class StripeController extends Controller
             $paymentIntent = PaymentIntent::create([
                 'amount'                 => (int) ($total_price * 100),
                 'currency'               => 'usd',
-                'payment_method_types'   => ['card'],
+                // 'payment_method_types'   => ['card'],
+                'payment_method' => $request->payment_method,
                 'transfer_data'          => [
                     'destination' => $stripeAccountId,
                 ],
@@ -90,8 +94,33 @@ class StripeController extends Controller
             ]);
 
             return response()->json([
-                'client_secret'     => $paymentIntent->client_secret,
-                'payment_intent_id' => $paymentIntent->id,
+                'data'     => $paymentIntent,
+            ]);
+        } catch (Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+
+
+    public function productPromotionIntent(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'product_id' => 'required|integer',
+            'amount'=>'required',
+        ]);
+        if ($validator->fails()) {
+            return response()->json(['status' => false, 'message' => $validator->errors()], 400);
+        }
+        Stripe::setApiKey(env('STRIPE_SECRET'));
+        try {
+            $paymentIntent = PaymentIntent::create([
+                'amount' => $request->amount*100,
+                'currency' => 'usd',
+                'payment_method' => $request->payment_method,
+            ]);
+            return response()->json([
+                'data'     => $paymentIntent,
             ]);
         } catch (Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);

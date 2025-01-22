@@ -20,8 +20,12 @@ return new class extends Migration
             $table->string('currency')->default('USD');
             $table->float('platform_fee',8,2)->nullable();
             $table->float('buyer_protection_fee',8,2)->nullable();
-            $table->string('status')->default('pending');
+            $table->string('status')->default('approved');
             $table->string('stripe_payment_id')->nullable();
+            $table->string('country')->nullable();
+            $table->string('state')->nullable();
+            $table->string('city')->nullable();
+            $table->string('zip')->nullable();
             $table->timestamps();
         });
     }

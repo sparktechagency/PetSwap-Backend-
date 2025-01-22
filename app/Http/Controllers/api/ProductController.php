@@ -217,8 +217,10 @@ class ProductController extends Controller
             ] : null;
 
             $fee = Fee::first();
-            $calculate_buyer_protection_fee = ($product->price * $fee->buyer_protection_fee) / 100;
+            $calculate_buyer_protection_fee = round(($product->price * $fee->buyer_protection_fee) / 100,2);
             $price_with_buyer_protection_fee = round($calculate_buyer_protection_fee + $product->price, 2);
+            $shipping_fee=2;
+            $perday_promotion=$fee->per_day_promotion_amount;
             $response = [
                 'id' => $product->id,
                 'user_id' => $product->user_id,
@@ -235,12 +237,16 @@ class ProductController extends Controller
                 'is_food' => $product->is_food,
                 'weight' => $product->weight,
                 'price_with_buyer_protection_fee' => $price_with_buyer_protection_fee,
+                'buyer_protection_fee'=>$calculate_buyer_protection_fee,
                 'platform_fee' => $fee->platform_fee,
+                'shipping_fee'=>$shipping_fee,
+                'final_price'=>round($product->price+$calculate_buyer_protection_fee+$fee->platform_fee+$shipping_fee,2),
+                'per_day_promotion_amount'=>$perday_promotion,
                 'view_count' => $product->view_count,
                 'status' => $product->status,
                 'created_at' => $product->created_at,
                 'updated_at' => $product->updated_at,
-                'rating' => $rating_data, // Include the rating data or null
+                'rating' => $rating_data,
                 'user' => [
                     'name' => $product->user->name,
                     'email' => $product->user->email,

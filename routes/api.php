@@ -32,6 +32,9 @@ Route::group(['middleware' => 'api'], function ($router) {
         Route::post('login', [AuthController::class, 'login'])->name('login');
         Route::post('social-login', [AuthController::class, 'socialLogin'])->name('social_login');
         Route::post('account-verification', [AuthController::class, 'verifyAccount'])->name('verify_account');
+        Route::post('check-token', [AuthController::class, 'validateToken'])->name('validateToken');
+
+
         // reset password routes
         Route::post('forget-password', [AuthController::class, 'forgetPassword'])->name('forget_password');
         Route::post('otp-verification', [AuthController::class, 'otpVerify'])->name('otp_verification');
@@ -114,6 +117,7 @@ Route::group(['middleware' => 'api'], function ($router) {
             //stripe account
             Route::post('create-connected-account',[StripeController::class,'createStripeConnectedAccount']);
             Route::post('buy-product-intent',[StripeController::class,'buyProductIntent']);
+            Route::post('product-promotion-intent',[StripeController::class,'productPromotionIntent']);
         });
 
         // admin routes

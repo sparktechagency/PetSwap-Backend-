@@ -29,20 +29,28 @@ class OrderController extends Controller
 
         if ($orders) {
             $orders->getCollection()->transform(function ($order) {
-
+                // Decode the images if stored as a JSON string
                 if (is_string($order->product->images)) {
                     $order->product->images = json_decode($order->product->images, true);
                 }
+
+                // Ensure the images are properly formatted URLs
                 $order->product->images = array_map(function ($image) {
-                    return url($image);
+                    // Check if the image already contains the base URL
+                    if (str_starts_with($image, 'http')) {
+                        return $image; // Return as-is if already a full URL
+                    }
+                    return asset('uploads/' . $image); // Prefix with asset base path
                 }, $order->product->images);
-                // $order->product->wishlist = $order->product->wishlists->contains('user_id', $userId);
+
+                // Add wishlist count and remove wishlist collection
                 $order->product->wishlist_count = $order->product->wishlists->count();
                 unset($order->product->wishlists);
 
                 return $order;
             });
         }
+
 
         return response()->json([
             'status' => true,
