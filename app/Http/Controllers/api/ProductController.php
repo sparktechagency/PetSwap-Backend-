@@ -189,12 +189,19 @@ class ProductController extends Controller
 
     public function show(Request $request, $id)
     {
+        $user=Auth::user();
         try {
-            $product = Product::with('user:id,name,email,avatar,address')->where('id', $id)->firstOrFail();
+            $product = Product::with('user:id,name,email,avatar,address','wishlists')->withCount('wishlists')->where('id', $id)->firstOrFail();
             $product->images = json_decode($product->images, true) ?? [];
+
+            $wishlist = $user ? $product->wishlists->contains(function($wishlist) use ($user) {
+                return $wishlist->user_id == $user->id;
+            }) : false;
+
 
             // Get the latest rating and count ratings
             $last_rating = Rating::with('buyer')->where('products_id', $product->id)->latest()->first();
+            // return $last_rating;
             $rating_count = Rating::where('products_id', $product->id)->count();
 
             // Increment view count if the authenticated user is not the owner
@@ -244,6 +251,8 @@ class ProductController extends Controller
                 'per_day_promotion_amount'=>$perday_promotion,
                 'view_count' => $product->view_count,
                 'status' => $product->status,
+                'wishlist_count'=>$product->wishlists_count,
+                'wishlist'=>$wishlist,
                 'created_at' => $product->created_at,
                 'updated_at' => $product->updated_at,
                 'rating' => $rating_data,

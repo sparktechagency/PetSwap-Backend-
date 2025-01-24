@@ -61,6 +61,7 @@ Route::group(['middleware' => 'api'], function ($router) {
             // homepage route
             Route::get('home-page', [HomePageController::class, 'homePage'])->name('home.page');
             Route::post('add-to-wishlist', [WishlistController::class, 'addToWishlist'])->name('home.add_to_wishlist');
+            Route::get('get-wishlist', [WishlistController::class, 'getWishlist']);
             Route::get('similar-product', [HomePageController::class, 'similarProduct'])->name('home.similar_product');
 
             //product route
@@ -81,6 +82,7 @@ Route::group(['middleware' => 'api'], function ($router) {
 
             // offer asking
             Route::post('asking-offer', [OfferAskingController::class, 'store'])->name('offer.store');
+            Route::get('asking-offer', [OfferAskingController::class, 'show'])->name('offer.get');
             Route::post('offer-accept-reject/{id}', [OfferAskingController::class, 'accept_reject'])->name('offer.accept_reject');
 
             // notification route

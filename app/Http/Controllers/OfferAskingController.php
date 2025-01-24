@@ -124,4 +124,23 @@ class OfferAskingController extends Controller
         }
     }
 
+
+    public function show(Request $request) {
+        try{
+            $offer_id=$request->offer_id;
+        $offer=OfferPrice::findOrFail($offer_id);
+        return response()->json([
+            'status' => true,
+            'message' => "Offer data get successfully",
+            'data'=>$offer,
+        ], 200);
+    }catch(Exception $e) {
+        return response()->json([
+            'status' => false,
+            'message' => "Offer data get successfully",
+            'data'=>null,
+        ], 200);
+
+        }
+    }
 }

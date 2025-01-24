@@ -14,6 +14,7 @@ class HomePageController extends Controller
     public function similarProduct(Request $request)
     {
 
+        $user=Auth::user();
         $per_page       = $request->per_page;
         $productId      = $request->product_id;
         $currentProduct = Product::find($productId);
@@ -37,7 +38,7 @@ class HomePageController extends Controller
 
         $fee = Fee::first();
 
-        $products->getCollection()->transform(function ($product) use ($fee) {
+        $products->getCollection()->transform(function ($product) use ($fee,$user) {
 
             $product->images = array_map(function ($image) {
                 return asset('uploads/' . $image);
@@ -45,6 +46,8 @@ class HomePageController extends Controller
             $calculate_buyer_protection_fee           = ($product->price * $fee->buyer_protection_fee) / 100;
             $product->price_with_buyer_protection_fee = round($calculate_buyer_protection_fee + $product->price, 2);
             $product->wishlist_count                  = $product->wishlists->count();
+            $product->wishlist   = $user ? $product->wishlists->contains('user_id', $user->id) : false;
+
             unset($product->wishlists);
 
             return $product;
@@ -149,6 +152,7 @@ class HomePageController extends Controller
     public function homePage(Request $request)
     {
         $fee      = Fee::first();
+        $user=Auth::user();
         $per_page = $request->per_page;
         if ($request->type == 'recommended') {
             $products = Product::with(['wishlists', 'user:id,name,avatar'])->whereNot('user_id', Auth::user()->id)
@@ -164,7 +168,7 @@ class HomePageController extends Controller
             }
             $products = $products->paginate($per_page ?? 10);
 
-            $products->getCollection()->transform(function ($product) use ($fee) {
+            $products->getCollection()->transform(function ($product) use ($fee,$user) {
                 $product->images = json_decode($product->images, true);
                 $product->images = array_map(function ($image) {
                     return asset('uploads/' . $image);
@@ -172,6 +176,8 @@ class HomePageController extends Controller
                 $calculate_buyer_protection_fee           = ($product->price * $fee->buyer_protection_fee) / 100;
                 $product->price_with_buyer_protection_fee = round($calculate_buyer_protection_fee + $product->price, 2);
                 $product->wishlist_count                  = $product->wishlists->count();
+                $product->wishlist   = $user ? $product->wishlists->contains('user_id', $user->id) : false;
+
                 unset($product->wishlists);
                 return $product;
             });
@@ -191,14 +197,16 @@ class HomePageController extends Controller
             }
             $products = $products->paginate($per_page ?? 10);
 
-            $products->getCollection()->transform(function ($product) use ($fee) {
+            $products->getCollection()->transform(function ($product) use ($fee,$user) {
                 $product->images = json_decode($product->images, true);
                 $product->images = array_map(function ($image) {
                     return asset('uploads/' . $image);
                 }, $product->images);
                 $calculate_buyer_protection_fee           = ($product->price * $fee->buyer_protection_fee) / 100;
                 $product->price_with_buyer_protection_fee = round($calculate_buyer_protection_fee + $product->price, 2);
-                $product->wishlist_count                  = $product->wishlists->count();
+                $product->wishlist_count                    = $product->wishlists->count();
+                $product->wishlist  = $user ? $product->wishlists->contains('user_id', $user->id) : false;
+
                 unset($product->wishlists);
 
                 $product->user = [
@@ -251,7 +259,6 @@ class HomePageController extends Controller
         return response()->json(['message' => 'Show search product', 'data' => $products]);
         // }
 
-        // return response()->json(['message' => 'No data found! please select type first'], 404);
     }
 
 }
