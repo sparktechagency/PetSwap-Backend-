@@ -19,7 +19,7 @@ class WishlistFactory extends Factory
      */
     public function definition(): array
     {
-        $users = User::all()->pluck('id')->toArray();
+        $users = User::where('role', 'USER')->pluck('id')->toArray();
         $products = Product::all()->pluck('id')->toArray();
 
         return [

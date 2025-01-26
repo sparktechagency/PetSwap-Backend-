@@ -63,56 +63,57 @@ class OfferAskingController extends Controller
     {
         try {
             $offer = OfferPrice::findOrFail($id);
-            $seller = User::findOrFail($offer->seller_id);
-            if ($request->type == 'accept') {
-                $offer->status = 'accept';
-                $offer->save();
+            if($offer->status == 'pending'){
+                $seller = User::findOrFail($offer->seller_id);
+                if ($request->type == 'accept') {
+                    $offer->status = 'accept';
+                    $offer->save();
 
-                $notification_data = [
-                    'seller_image' => $seller->avatar,
-                    'seller_name' => $seller->name,
-                    'product_id' => $offer->product_id,
-                    'offer_id' => $offer->id,
-                ];
+                    $notification_data = [
+                        'seller_image' => $seller->avatar,
+                        'seller_name' => $seller->name,
+                        'product_id' => $offer->product_id,
+                        'offer_id' => $offer->id,
+                    ];
 
-                if ($offer->buyer_id) {
-                    $buyer = User::findOrFail($offer->buyer_id);
-                    $buyer->notify(new OfferAcceptNotification($notification_data));
+                    if ($offer->buyer_id) {
+                        $buyer = User::findOrFail($offer->buyer_id);
+                        $buyer->notify(new OfferAcceptNotification($notification_data));
+                    }
+
+                    return response()->json([
+                        'status' => true,
+                        'message' => "Offer accepted successfully.",
+                        'data'=>$offer,
+                    ], 200);
                 }
 
-                return response()->json([
-                    'status' => true,
-                    'message' => "Offer accepted successfully.",
-                    'data'=>$offer,
-                ], 200);
-            }
+                if ($request->type == 'reject') {
+                    $offer->status = 'reject';
+                    $offer->save();
 
-            if ($request->type == 'reject') {
-                $offer->status = 'reject';
-                $offer->save();
+                    $notification_data = [
+                        'seller_image' => $seller->avatar,
+                        'seller_name' => $seller->name,
+                        'product_id' => $offer->product_id,
+                        'offer_id' => $offer->id,
+                    ];
 
-                $notification_data = [
-                    'seller_image' => $seller->avatar,
-                    'seller_name' => $seller->name,
-                    'product_id' => $offer->product_id,
-                    'offer_id' => $offer->id,
-                ];
+                    if ($offer->buyer_id) {
+                        $buyer = User::findOrFail($offer->buyer_id);
+                        $buyer->notify(new OfferRejectNotification($notification_data));
+                    }
 
-                if ($offer->buyer_id) {
-                    $buyer = User::findOrFail($offer->buyer_id);
-                    $buyer->notify(new OfferRejectNotification($notification_data));
+                    return response()->json([
+                        'status' => true,
+                        'message' => "Offer rejected successfully.",
+                        'data'=>$offer,
+                    ], 200);
                 }
-
-                return response()->json([
-                    'status' => true,
-                    'message' => "Offer rejected successfully.",
-                    'data'=>$offer,
-                ], 200);
             }
-
             return response()->json([
                 'status' => false,
-                'message' => "Invalid offer action.",
+                'message' => "You already made an action of this offer.",
             ], 400);
 
         } catch (Exception $e) {

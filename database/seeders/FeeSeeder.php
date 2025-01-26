@@ -1,10 +1,8 @@
 <?php
-
 namespace Database\Seeders;
 
 use App\Models\Fee;
 use Illuminate\Database\Seeder;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
 class FeeSeeder extends Seeder
 {
@@ -13,9 +11,10 @@ class FeeSeeder extends Seeder
      */
     public function run(): void
     {
-       Fee::create([
-        'platform_fee'=>2,
-        'buyer_protection_fee'=>5,
-       ]);
+        Fee::create([
+            'platform_fee'         => 1,
+            'buyer_protection_fee' => 5,
+            'per_day_promotion_amount'=>2
+        ]);
     }
 }

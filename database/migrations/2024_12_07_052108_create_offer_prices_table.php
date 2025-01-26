@@ -18,6 +18,7 @@ return new class extends Migration
             $table->foreignId('product_id')->constrained('products')->cascadeOnDelete();
             $table->float('asking_price');
             $table->enum('status',['accept','reject','pending'])->default('pending');
+            $table->boolean('is_buy')->default(false);
             $table->timestamps();
         });
     }

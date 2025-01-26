@@ -13,6 +13,6 @@ class RatingSeeder extends Seeder
      */
     public function run(): void
     {
-        Rating::factory()->count(100)->create();
+        Rating::factory()->count(count: 100)->create();
     }
 }

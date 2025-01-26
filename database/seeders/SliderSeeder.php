@@ -13,9 +13,9 @@ class SliderSeeder extends Seeder
      */
     public function run(): void
     {
-        for ($i = 0; $i < 3; $i++) {
+        for ($i = 1; $i < 5; $i++) {
             Slider::create([
-                'image'=>fake()->imageUrl(640, 480, '640', true, '480','slider')
+                'image'=>'sliders/'.$i.'.'.'jpg',
             ]);
         }
     }

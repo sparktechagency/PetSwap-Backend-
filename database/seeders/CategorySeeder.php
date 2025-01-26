@@ -1,5 +1,4 @@
 <?php
-
 namespace Database\Seeders;
 
 use App\Models\Category;
@@ -13,17 +12,43 @@ class CategorySeeder extends Seeder
     public function run(): void
     {
         $categories = [
-            'Dog',
-            'Cat',
-            'Small Pets',
-            'Fish',
-            'Bird',
-            'Reptiles',
+            [
+                'name'       => 'Dog',
+                'icon'       => 'category/dog.png',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'name'       => 'Cat',
+                'icon'       => 'category/cat.png',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'name'       => 'Small Pets',
+                'icon'       => 'category/smal_pets.png',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'name'       => 'Fish',
+                'icon'       => 'category/fish.png',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'name'       => 'Bird',
+                'icon'       => 'category/bird.png',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'name'       => 'Reptiles',
+                'icon'       => 'category/reptile.png',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
         ];
-        foreach ($categories as $category) {
-            Category::create([
-                'name' => $category,
-            ]);
-        }
+        Category::insert($categories);
     }
 }

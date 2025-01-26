@@ -1,12 +1,9 @@
 <?php
-
 namespace Database\Seeders;
 
 use App\Models\Category;
 use App\Models\SubCategory;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use Faker\Factory as Faker;
 
 class SubCategorySeeder extends Seeder
 {
@@ -15,18 +12,26 @@ class SubCategorySeeder extends Seeder
      */
     public function run(): void
     {
-        $categories=Category::all();
-        $faker = Faker::create();
+        $categories    = Category::all();
+        $subcategories = [
+            'Dog'        => ['Dry Dog Food', 'Wet Dog Food', 'Dog Treats', 'Dog Toys'],
+            'Cat'        => ['Dry Cat Food', 'Wet Cat Food', 'Cat Treats', 'Cat Toys'],
+            'Small Pets' => ['Small Pet Food', 'Small Pet Cages', 'Bedding', 'Small Pet Toys'],
+            'Fish'       => ['Fish Food', 'Aquariums', 'Filters & Pumps', 'Aquarium Decorations'],
+            'Bird'       => ['Bird Food', 'Bird Cages', 'Perches & Stands', 'Bird Toys'],
+            'Reptiles'   => ['Reptile Food', 'Terrariums', 'Heating & Lighting', 'Reptile Accessories'],
+        ];
 
-        $adjectives = ['Clothing', 'Collars', 'Bowls', 'Grooming', 'Beds', 'Toys', 'Training', 'Carriers'];
-        $extras = ['& accessories', '& leads', '& feeders', '', '& blankets', '', 'accessories', '& crates'];
-
-
-        foreach (range(1, 30) as $index) {
-            SubCategory::create([
-                'category_id' => $categories->random()->id,
-                'name' => $faker->randomElement($adjectives) . ' ' . $faker->randomElement($extras),
-            ]);
+        foreach ($categories as $category) {
+            if (isset($subcategories[$category->name])) {
+                foreach ($subcategories[$category->name] as $subcategoryName) {
+                    SubCategory::create([
+                        'category_id' => $category->id,
+                        'name'        => $subcategoryName,
+                    ]);
+                }
+            }
         }
     }
+
 }

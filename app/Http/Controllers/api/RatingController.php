@@ -27,9 +27,9 @@ class RatingController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'seller_id' => 'required|numeric',
-            'products_id' => 'required|numeric',
-            'rating' => 'nullable|numeric|max:5',
+            'seller_id' => 'required|string',
+            'products_id' => 'required|string',
+            'rating' => 'nullable|string|max:5',
         ]);
         if ($validator->fails()) {
             return response()->json(['status' => false, 'message' => $validator->errors()], 400);
