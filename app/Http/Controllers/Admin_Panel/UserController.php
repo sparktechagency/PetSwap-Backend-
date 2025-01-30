@@ -38,13 +38,19 @@ class UserController extends Controller
         }
         $products = $products->paginate($per_page ?? 10);
         $products->getCollection()->transform(function ($product) {
-            if (is_string($product->images)) {
-                $product->images = json_decode($product->images, true);
+
+            $product->images = json_decode($product->images);
+            if (is_array($product->images)) {
+                $product->images = array_map(function ($image) {
+                    return asset('uploads/' . $image);
+                }, $product->images);
+            } else {
+                $product->images = [];
             }
             return $product;
         });
         $total_product = Product::where('user_id', $id)->where('status', 'Approved')->count();
-        $total_sell = Payment::where('seller_id', $id)->sum('seller_amount');
+        $total_sell = Payment::where('seller_id', $id)->sum('amount');
         $data = [
             'total_product' => $total_product,
             'total_sell' => $total_sell,
@@ -70,10 +76,10 @@ class UserController extends Controller
                     $date = $currentDate->copy()->subDays($i);
                     $totalRevenue = Payment::where('seller_id', $id)
                         ->whereDate('created_at', $date)
-                        ->sum('seller_amount');
+                        ->sum('amount');
                     $result[] = [
                         'week_day' => $date->format('l'),
-                        'total_revenue' => $totalRevenue,
+                        'Total Revenue' => round($totalRevenue,2),
                     ];
                 }
                 break;
@@ -82,7 +88,7 @@ class UserController extends Controller
                 $currentYear = $currentDate->year;
                 $revenueData = Payment::where('seller_id', $id)
                     ->whereYear('created_at', $currentYear)
-                    ->selectRaw('MONTH(created_at) as month, SUM(seller_amount) as total_revenue')
+                    ->selectRaw('MONTH(created_at) as month, SUM(amount) as total_revenue')
                     ->groupBy('month')
                     ->orderBy('month', 'asc')
                     ->get()
@@ -90,7 +96,7 @@ class UserController extends Controller
                 for ($month = 1; $month <= 12; $month++) {
                     $result[] = [
                         'month' => date('F', mktime(0, 0, 0, $month, 1)),
-                        'total_revenue' => isset($revenueData[$month]) ? $revenueData[$month]->total_revenue : 0,
+                        'Total Revenue' => isset($revenueData[$month]) ? round($revenueData[$month]->total_revenue,2) : 0,
                     ];
                 }
                 break;
@@ -100,11 +106,11 @@ class UserController extends Controller
                 for ($year = $startYear; $year <= $endYear; $year++) {
                     $totalRevenue = Payment::where('seller_id', $id)
                         ->whereYear('created_at', $year)
-                        ->sum('seller_amount');
+                        ->sum('amount');
 
                     $result[] = [
                         'year' => $year,
-                        'total_revenue' => $totalRevenue,
+                        'Total Revenue' => round($totalRevenue, 2),
                     ];
                 }
                 break;

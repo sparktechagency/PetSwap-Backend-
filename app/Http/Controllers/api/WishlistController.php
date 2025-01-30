@@ -1,10 +1,11 @@
 <?php
 namespace App\Http\Controllers\api;
 
-use App\Http\Controllers\Controller;
+use App\Models\Fee;
 use App\Models\Product;
 use App\Models\Wishlist;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
@@ -47,10 +48,26 @@ class WishlistController extends Controller
 
     public function getWishlist(Request $request)
     {
+        $fee = Fee::first();
         $per_page = $request->per_page ?? 10;
         $products = Product::with('wishlists')->whereHas('wishlists', function ($q) {
             $q->where('user_id', Auth::user()->id);
         })->paginate($per_page);
+
+        $formattedProducts = $products->getCollection()->map(function ($product) use($fee) {
+            $product->images = json_decode($product->images);
+            if (is_array($product->images)) {
+                $product->images = array_map(function ($image) {
+                    return asset('uploads/' . $image);
+                }, $product->images);
+            } else {
+                $product->images = [];
+            }
+            $calculate_buyer_protection_fee = ($product->price * $fee->buyer_protection_fee) / 100;
+            $product->price_with_buyer_protection_fee= round($calculate_buyer_protection_fee+$product->price,2);
+            return $product;
+        });
+        $products->setCollection($formattedProducts);
         return response()->json([
             'status'  => true,
             'message' => "wishlist retrieve successfully.",

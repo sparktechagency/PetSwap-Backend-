@@ -175,16 +175,17 @@ class ProductFactory extends Factory
         $status     = ['Approved', 'Pending', 'Canceled'];
 
         $randomProduct = Arr::random($product_data);
+        $randomSubCategories = Arr::random($subCategories, rand(1, 4));
 
         return [
             'user_id'         => Arr::random($users),
             'category_id'     => $randomCategoryId,
-            'sub_category_id' => Arr::random($subCategories, rand(1, 4)),
+            'sub_category_id' => array_map('strval', $randomSubCategories),
             'title'           => $randomProduct['title'],
             'description'     => $randomProduct['description'],
             'images'          => json_encode(
                 collect($this->faker->randomElements(
-                    range(1, 82),
+                    range(1, 150),
                     $this->faker->numberBetween(1, 5)
                 ))->map(function ($value) {
                     return 'product/'.$value .'.png';

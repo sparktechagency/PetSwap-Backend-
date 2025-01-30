@@ -23,7 +23,7 @@ class AuthController extends Controller
             'name'     => 'required',
             'email'    => 'required|email|unique:users,email',
             'address'  => 'required|string|max:255',
-            'password' => 'required',
+            'password' => 'required|string|min:4',
         ]);
 
         if ($validator->fails()) {
@@ -129,7 +129,7 @@ class AuthController extends Controller
             $final_name = time() . '.' . $image->getClientOriginalExtension();
             $image->move(public_path('uploads/user'), $final_name);
             $user->update([
-                'avatar' => $final_name,
+                'avatar' => 'user/'.$final_name,
             ]);
         }
         $token   = JWTAuth::fromUser($user);

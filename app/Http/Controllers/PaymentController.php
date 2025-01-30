@@ -8,6 +8,7 @@ use App\Models\ProductPromotion;
 use App\Models\Subcription;
 use App\Models\User;
 use App\Models\UserPlan;
+use App\Notifications\BuyProductNotification;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
@@ -40,6 +41,14 @@ class PaymentController extends Controller
                 'zip'                  => $request->zip,
             ]);
 
+            $notification_data = [
+                'buyer_image' => Auth::user()->avatar,
+                'buyer_name' => Auth::user()->name,
+                'product_id' => $product->id,
+            ];
+
+            $seller->notify(new BuyProductNotification($notification_data));
+
             return response()->json([
                 'status'  => true,
                 'message' => 'Payment Successfull.',
@@ -51,7 +60,6 @@ class PaymentController extends Controller
                 'message' => 'Payment failed: ' . $e->getMessage(),
             ], 400);
         }
-
     }
 
     public function productPromotion(Request $request, $id)

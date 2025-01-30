@@ -14,6 +14,47 @@ use Stripe\Stripe;
 
 class StripeController extends Controller
 {
+    // public function createStripeConnectedAccount(Request $request)
+    // {
+    //     $validator = Validator::make($request->all(), [
+    //         'email' => 'required|email|exists:users,email',
+    //     ]);
+    //     if ($validator->fails()) {
+    //         return response()->json(['status' => false, 'message' => $validator->errors()], 400);
+    //     }
+    //     $user = User::where('email', $request->email)->first();
+    //     Stripe::setApiKey(env('STRIPE_SECRET'));
+    //     try {
+    //         $account = Account::create([
+    //             'type'         => 'express',
+    //             'country'      => 'US',
+    //             'email'        => $user->email,
+    //             'capabilities' => [
+    //                 'card_payments' => ['requested' => true],
+    //                 'transfers'     => ['requested' => true],
+    //             ],
+    //         ]);
+
+    //         $user->stripe_account_id = $account->id;
+    //         $user->save();
+
+    //         $accountLink = AccountLink::create([
+    //             'account'     => $account->id,
+    //             'refresh_url' => url('/vendor/reauth'),
+    //             'return_url'  => url('/vendor/dashboard'),
+    //             'type'        => 'account_onboarding',
+    //         ]);
+
+    //         return response()->json([
+    //             'message'        => 'Stripe Connect account created successfully',
+    //             'onboarding_url' => $accountLink->url,
+    //         ]);
+    //     } catch (Exception $e) {
+    //         Log::error($e->getMessage());
+    //         return response()->json(['error' => $e->getMessage()], 500);
+    //     }
+    // }
+
     public function createStripeConnectedAccount(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -34,14 +75,11 @@ class StripeController extends Controller
                     'transfers'     => ['requested' => true],
                 ],
             ]);
-
-            $user->stripe_account_id = $account->id;
-            $user->save();
-
-            $accountLink = AccountLink::create([
+            $customReturnUrl = url("/connected?status=success&email={$user->email}&account_id={$account->id}");
+            $accountLink     = AccountLink::create([
                 'account'     => $account->id,
                 'refresh_url' => url('/vendor/reauth'),
-                'return_url'  => url('/vendor/dashboard'),
+                'return_url'  => $customReturnUrl,
                 'type'        => 'account_onboarding',
             ]);
 
@@ -86,7 +124,7 @@ class StripeController extends Controller
                 'amount'                 => (int) ($total_price * 100),
                 'currency'               => 'usd',
                 // 'payment_method_types'   => ['card'],
-                'payment_method' => $request->payment_method,
+                'payment_method'         => $request->payment_method,
                 'transfer_data'          => [
                     'destination' => $stripeAccountId,
                 ],
@@ -94,20 +132,18 @@ class StripeController extends Controller
             ]);
 
             return response()->json([
-                'data'     => $paymentIntent,
+                'data' => $paymentIntent,
             ]);
         } catch (Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 
-
-
     public function productPromotionIntent(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'product_id' => 'required|integer',
-            'amount'=>'required',
+            'amount'     => 'required',
         ]);
         if ($validator->fails()) {
             return response()->json(['status' => false, 'message' => $validator->errors()], 400);
@@ -115,12 +151,12 @@ class StripeController extends Controller
         Stripe::setApiKey(env('STRIPE_SECRET'));
         try {
             $paymentIntent = PaymentIntent::create([
-                'amount' => $request->amount*100,
-                'currency' => 'usd',
+                'amount'         => $request->amount * 100,
+                'currency'       => 'usd',
                 'payment_method' => $request->payment_method,
             ]);
             return response()->json([
-                'data'     => $paymentIntent,
+                'data' => $paymentIntent,
             ]);
         } catch (Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);

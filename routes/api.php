@@ -32,7 +32,7 @@ Route::group(['middleware' => 'api'], function ($router) {
         Route::post('login', [AuthController::class, 'login'])->name('login');
         Route::post('social-login', [AuthController::class, 'socialLogin'])->name('social_login');
         Route::post('account-verification', [AuthController::class, 'verifyAccount'])->name('verify_account');
-        Route::post('check-token', [AuthController::class, 'validateToken'])->name('validateToken');
+        Route::get('check-token', [AuthController::class, 'validateToken'])->name('validateToken');
 
 
         // reset password routes
@@ -74,6 +74,7 @@ Route::group(['middleware' => 'api'], function ($router) {
             Route::put('product/status/{id}', [ProductController::class, 'statusUpdate'])->name('product.StatusUpdate');
             Route::delete('product/{id}', [ProductController::class, 'delete'])->name('product.delete');
 
+
             //rating route
             Route::get('rating', [RatingController::class, 'index'])->name('rating.index');
             Route::post('rating', [RatingController::class, 'store'])->name('rating.store');
@@ -84,7 +85,8 @@ Route::group(['middleware' => 'api'], function ($router) {
             Route::post('asking-offer', [OfferAskingController::class, 'store'])->name('offer.store');
             Route::get('asking-offer', [OfferAskingController::class, 'show'])->name('offer.get');
             Route::post('offer-accept-reject/{id}', [OfferAskingController::class, 'accept_reject'])->name('offer.accept_reject');
-
+            Route::get('offer-product-detail/{id}', [OfferAskingController::class, 'offerdetails']);
+            Route::get('offer_buyed/{id}',[OfferAskingController::class,'change_status']);
             // notification route
             Route::get('notifications', [NotificationController::class, 'notifications'])->name('all_Notification');
             Route::get('mark-notification/{id}', [NotificationController::class, 'singleMark'])->name('singleMark');

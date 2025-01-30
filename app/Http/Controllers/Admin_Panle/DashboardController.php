@@ -119,7 +119,11 @@ class DashboardController extends Controller
         $type = $request->input('type');
         $currentYear = now()->year;
 
-        $allMonths = range(1, 12);
+        // Define an array for all months as names
+        $allMonths = [
+            1 => 'January', 2 => 'February', 3 => 'March', 4 => 'April', 5 => 'May', 6 => 'June',
+            7 => 'July', 8 => 'August', 9 => 'September', 10 => 'October', 11 => 'November', 12 => 'December'
+        ];
         $result = [];
 
         if ($type == 'active_user') {
@@ -130,10 +134,11 @@ class DashboardController extends Controller
                 ->orderBy('month', 'asc')
                 ->get()
                 ->keyBy('month');
-            foreach ($allMonths as $month) {
+
+            foreach ($allMonths as $monthNumber => $monthName) {
                 $result[] = [
-                    'month' => $month,
-                    'active_users' => isset($activeUserData[$month]) ? $activeUserData[$month]->active_users : 0,
+                    'month' => $monthName,
+                    'Active Users' => isset($activeUserData[$monthNumber]) ? $activeUserData[$monthNumber]->active_users : 0,
                 ];
             }
         } elseif ($type == 'revenue') {
@@ -144,10 +149,10 @@ class DashboardController extends Controller
                 ->get()
                 ->keyBy('month');
 
-            foreach ($allMonths as $month) {
+            foreach ($allMonths as $monthNumber => $monthName) {
                 $result[] = [
-                    'month' => $month,
-                    'total_revenue' => isset($revenueData[$month]) ? $revenueData[$month]->total_revenue : 0,
+                    'month' => $monthName,
+                    'Total Revenue' => isset($revenueData[$monthNumber]) ? $revenueData[$monthNumber]->total_revenue : 0,
                 ];
             }
         }
@@ -158,5 +163,6 @@ class DashboardController extends Controller
             'data' => $result,
         ]);
     }
+
 
 }

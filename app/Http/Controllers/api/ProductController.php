@@ -105,7 +105,7 @@ class ProductController extends Controller
 
         $validator = Validator::make($request->all(), [
             'category_id' => 'required|numeric',
-            'sub_category_ids' => 'required|array',
+            'sub_category_id' => 'required|array',
             'title' => 'required|string|max:255',
             'price' => 'required|numeric',
             'images' => 'nullable|array|max:5',
@@ -117,28 +117,30 @@ class ProductController extends Controller
 
         try {
             $product = Product::find($id);
-            $existingImagePaths = json_decode($product->images, true) ?? [];
+            // if($request->images){
+                $existingImagePaths = json_decode($product->images, true) ?? [];
 
-            foreach ($existingImagePaths as $oldPath) {
-                $oldFile = public_path('uploads/' . $oldPath);
-                if (file_exists($oldFile)) {
-                    unlink($oldFile);
+                foreach ($existingImagePaths as $oldPath) {
+                    $oldFile = public_path('uploads/' . $oldPath);
+                    if (file_exists($oldFile)) {
+                        unlink($oldFile);
+                    }
                 }
-            }
-            $newImagePaths = [];
-            if ($request->hasFile('images')) {
-                foreach ($request->file('images') as $image) {
-                    $final_name = time() . uniqid() . '.' . $image->extension();
-                    $image->move(public_path('uploads/product'), $final_name);
-                    $newImagePaths[] = 'product/' . $final_name;
+                $newImagePaths = [];
+                if ($request->hasFile('images')) {
+                    foreach ($request->file('images') as $image) {
+                        $final_name = time() . uniqid() . '.' . $image->extension();
+                        $image->move(public_path('uploads/product'), $final_name);
+                        $newImagePaths[] = 'product/' . $final_name;
+                    }
                 }
-            }
+            // }
             $product->update([
                 'category_id' => $request->category_id ?? $product->category_id,
-                'sub_category_id' => $request->sub_category_ids,
+                'sub_category_id' => $request->sub_category_id,
                 'title' => $request->title ?? $product->title,
                 'description' => $request->description ?? $product->description,
-                'images' => json_encode($newImagePaths),
+                'images' => json_encode($newImagePaths) ?? $product->images,
                 'price' => $request->price ?? $product->price,
                 'brand' => $request->brand ?? $product->brand,
                 'condition' => $request->condition ?? $product->condition,
@@ -226,7 +228,7 @@ class ProductController extends Controller
             $fee = Fee::first();
             $calculate_buyer_protection_fee = round(($product->price * $fee->buyer_protection_fee) / 100,2);
             $price_with_buyer_protection_fee = round($calculate_buyer_protection_fee + $product->price, 2);
-            $shipping_fee=2;
+            $shipping_fee=0;
             $perday_promotion=$fee->per_day_promotion_amount;
             $response = [
                 'id' => $product->id,
@@ -297,4 +299,6 @@ class ProductController extends Controller
             ], 404);
         }
     }
+
+
 }
