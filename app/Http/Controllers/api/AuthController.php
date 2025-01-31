@@ -129,7 +129,7 @@ class AuthController extends Controller
             $final_name = time() . '.' . $image->getClientOriginalExtension();
             $image->move(public_path('uploads/user'), $final_name);
             $user->update([
-                'avatar' => 'user/'.$final_name,
+                'avatar' => 'user/' . $final_name,
             ]);
         }
         $token   = JWTAuth::fromUser($user);
@@ -375,4 +375,18 @@ class AuthController extends Controller
         }
     }
 
+    public function checkConnect($email)
+    {
+        $user = User::where('email', $email)->first();
+        if ($user->stripe_account_id != null) {
+            return response()->json([
+                'status'  => true,
+                'message' => 'This user have an stripe connect account',
+            ]);
+        }
+        return response()->json([
+            'status'  => false,
+            'message' => "This user does't have an stripe connect account",
+        ]);
+    }
 }

@@ -25,7 +25,7 @@ return new class extends Migration
             $table->boolean('is_food')->default(false);
             $table->string('weight')->nullable();
             $table->unsignedBigInteger('view_count')->default(0);
-            $table->enum('status', ['Approved','Pending','Canceled'])->default('Approved');
+            $table->enum('status', ['Approved','Pending','Canceled'])->default('Pending');
             $table->boolean('is_promoted')->default(false);
             $table->timestamps();
         });

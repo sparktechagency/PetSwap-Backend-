@@ -49,6 +49,7 @@ Route::group(['middleware' => 'api'], function ($router) {
         Route::post('change-password', [AuthController::class, 'changePassword'])->name('change_password');
         Route::post('refresh', [AuthController::class, 'refresh'])->name('refresh_token');
         Route::post('logout', [AuthController::class, 'logout'])->name('logout');
+        Route::get('check-connect/{email}', [AuthController::class, 'checkConnect'])->name('check.connect');
 
         // user routes
         Route::middleware(['user'])->group(function () {
