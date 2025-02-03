@@ -25,7 +25,7 @@ class CategoryController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'icon' => 'required|mimes:png,jpg,jpeg',
+            'icon' => 'sometimes|mimes:png,jpg,jpeg',
             'name' => 'required|string|max:255',
             'subcategories' => 'nullable|array',
             'subcategories.*' => 'required|string',

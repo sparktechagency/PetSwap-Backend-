@@ -265,8 +265,6 @@ class AuthController extends Controller
         if ($validator->fails()) {
             return response()->json(['status' => false, 'message' => $validator->errors()], 400);
         }
-
-        try {
             $user          = Auth::user();
             $user->name    = $request->name ?? $user->name;
             $user->address = $request->address ?? $user->address;
@@ -285,19 +283,12 @@ class AuthController extends Controller
                 $user->avatar = $image_path;
             }
             $user->save();
-        } catch (Exception $e) {
-            Log::error($e->getMessage());
-            return response()->json([
-                'status'  => false,
-                'message' => 'Profile is not updated. Please check your info.',
-            ], 404);
-        }
 
-        return response()->json([
-            'status'  => true,
-            'message' => 'Profile updated successfully',
-            'data'    => $user,
-        ], 200);
+            return response()->json([
+                'status'  => true,
+                'message' => 'Profile update successfully',
+                'data'    => $user,
+            ], 200);
     }
 
     public function changePassword(Request $request)
