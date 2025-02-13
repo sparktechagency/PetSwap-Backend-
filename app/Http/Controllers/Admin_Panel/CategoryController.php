@@ -24,11 +24,12 @@ class CategoryController extends Controller
 
     public function store(Request $request)
     {
+
         $validator = Validator::make($request->all(), [
             'icon' => 'sometimes|mimes:png,jpg,jpeg',
-            'name' => 'required|string|max:255',
-            'subcategories' => 'nullable|array',
-            'subcategories.*' => 'required|string',
+            // 'name' => 'required|string|max:255',
+            // 'subcategories' => 'nullable|array',
+            // 'subcategories.*' => 'required|string',
         ]);
         if ($validator->fails()) {
             return response()->json(['status' => false, 'message' => $validator->errors()], 400);

@@ -14,46 +14,6 @@ use Stripe\Stripe;
 
 class StripeController extends Controller
 {
-    // public function createStripeConnectedAccount(Request $request)
-    // {
-    //     $validator = Validator::make($request->all(), [
-    //         'email' => 'required|email|exists:users,email',
-    //     ]);
-    //     if ($validator->fails()) {
-    //         return response()->json(['status' => false, 'message' => $validator->errors()], 400);
-    //     }
-    //     $user = User::where('email', $request->email)->first();
-    //     Stripe::setApiKey(env('STRIPE_SECRET'));
-    //     try {
-    //         $account = Account::create([
-    //             'type'         => 'express',
-    //             'country'      => 'US',
-    //             'email'        => $user->email,
-    //             'capabilities' => [
-    //                 'card_payments' => ['requested' => true],
-    //                 'transfers'     => ['requested' => true],
-    //             ],
-    //         ]);
-
-    //         $user->stripe_account_id = $account->id;
-    //         $user->save();
-
-    //         $accountLink = AccountLink::create([
-    //             'account'     => $account->id,
-    //             'refresh_url' => url('/vendor/reauth'),
-    //             'return_url'  => url('/vendor/dashboard'),
-    //             'type'        => 'account_onboarding',
-    //         ]);
-
-    //         return response()->json([
-    //             'message'        => 'Stripe Connect account created successfully',
-    //             'onboarding_url' => $accountLink->url,
-    //         ]);
-    //     } catch (Exception $e) {
-    //         Log::error($e->getMessage());
-    //         return response()->json(['error' => $e->getMessage()], 500);
-    //     }
-    // }
 
     public function createStripeConnectedAccount(Request $request)
     {
@@ -123,7 +83,6 @@ class StripeController extends Controller
             $paymentIntent = PaymentIntent::create([
                 'amount'                 => (int) ($total_price * 100),
                 'currency'               => 'usd',
-                // 'payment_method_types'   => ['card'],
                 'payment_method'         => $request->payment_method,
                 'transfer_data'          => [
                     'destination' => $stripeAccountId,
