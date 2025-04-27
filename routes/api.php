@@ -19,7 +19,6 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OfferAskingController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PaymentController;
-use App\Http\Controllers\PromotionController;
 use App\Http\Controllers\StripeController;
 use App\Http\Controllers\SubcriptionPlanController;
 use Illuminate\Support\Facades\Route;
@@ -33,7 +32,6 @@ Route::group(['middleware' => 'api'], function ($router) {
         Route::post('social-login', [AuthController::class, 'socialLogin'])->name('social_login');
         Route::post('account-verification', [AuthController::class, 'verifyAccount'])->name('verify_account');
         Route::get('check-token', [AuthController::class, 'validateToken'])->name('validateToken');
-
 
         // reset password routes
         Route::post('forget-password', [AuthController::class, 'forgetPassword'])->name('forget_password');
@@ -75,7 +73,6 @@ Route::group(['middleware' => 'api'], function ($router) {
             Route::put('product/status/{id}', [ProductController::class, 'statusUpdate'])->name('product.StatusUpdate');
             Route::delete('product/{id}', [ProductController::class, 'delete'])->name('product.delete');
 
-
             //rating route
             Route::get('rating', [RatingController::class, 'index'])->name('rating.index');
             Route::post('rating', [RatingController::class, 'store'])->name('rating.store');
@@ -87,7 +84,7 @@ Route::group(['middleware' => 'api'], function ($router) {
             Route::get('asking-offer', [OfferAskingController::class, 'show'])->name('offer.get');
             Route::post('offer-accept-reject/{id}', [OfferAskingController::class, 'accept_reject'])->name('offer.accept_reject');
             Route::get('offer-product-detail/{id}', [OfferAskingController::class, 'offerdetails']);
-            Route::get('offer_buyed/{id}',[OfferAskingController::class,'change_status']);
+            Route::get('offer_buyed/{id}', [OfferAskingController::class, 'change_status']);
             // notification route
             Route::get('notifications', [NotificationController::class, 'notifications'])->name('all_Notification');
             Route::get('mark-notification/{id}', [NotificationController::class, 'singleMark'])->name('singleMark');
@@ -118,12 +115,23 @@ Route::group(['middleware' => 'api'], function ($router) {
             // system see routes
             Route::get('system-fee', [FeeController::class, 'show']);
 
-
             //stripe account
-            Route::post('create-connected-account',[StripeController::class,'createStripeConnectedAccount']);
-            Route::post('buy-product-intent',[StripeController::class,'buyProductIntent']);
-            Route::post('product-promotion-intent',[StripeController::class,'productPromotionIntent']);
+            Route::post('create-connected-account', [StripeController::class, 'createStripeConnectedAccount']);
+            Route::post('buy-product-intent', [StripeController::class, 'buyProductIntent']);
+            Route::post('product-promotion-intent', [StripeController::class, 'productPromotionIntent']);
+
+            //shipment process
+
         });
+
+
+
+
+
+
+
+
+
 
         // admin routes
         Route::middleware('admin')->group(function () {
@@ -165,4 +173,7 @@ Route::group(['middleware' => 'api'], function ($router) {
 
         });
     });
+
+
+
 });
