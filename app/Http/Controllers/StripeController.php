@@ -63,7 +63,7 @@ class StripeController extends Controller
             return response()->json(['status' => false, 'message' => $validator->errors()], 400);
         }
         $total_price = $request->total_price;
-        $product     = Product::with('user')
+            $product     = Product::with('user')
             ->where('id', $request->product_id)
             ->first();
 
@@ -74,7 +74,7 @@ class StripeController extends Controller
         if (! $stripeAccountId) {
             return response()->json([
                 'status'  => false,
-                'message' => 'This use doesnot have any stripe account.',
+                'message' => 'This user doesnot connect with any stripe account.',
             ], 404);
         }
 

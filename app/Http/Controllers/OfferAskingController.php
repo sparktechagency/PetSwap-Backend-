@@ -174,47 +174,47 @@ class OfferAskingController extends Controller
             //     ] : null,
             // ] : null;
             $product_price = $product->price;
-            if($offer->status=='accept'){
+            if ($offer->status == 'accept') {
                 $price = $offer->asking_price;
-            }else{
+            } else {
                 $price = $product->price;
             }
 
             $calculate_buyer_protection_fee  = round(($price * $fee->buyer_protection_fee) / 100, 2);
             $price_with_buyer_protection_fee = round($calculate_buyer_protection_fee + $price, 2);
-            $shipping_fee                    = 0;
+            $shipping_fee                    = $fee->delivery_fee;
             $perday_promotion                = $fee->per_day_promotion_amount;
 
             $response = [
-                'id'                       => $product->id,
-                'user_id'                  => $product->user_id,
-                'category_id'              => $product->category_id,
-                'sub_category_id'          => $product->sub_category_id,
-                'title'                    => $product->title,
-                'description'              => $product->description,
-                'images'                   => array_map(function ($image) {
+                'id'                              => $product->id,
+                'user_id'                         => $product->user_id,
+                'category_id'                     => $product->category_id,
+                'sub_category_id'                 => $product->sub_category_id,
+                'title'                           => $product->title,
+                'description'                     => $product->description,
+                'images'                          => array_map(function ($image) {
                     return asset('uploads/' . $image);
                 }, $product->images),
-                'price' => $price,
-                'brand'                    => $product->brand,
-                'condition'                => $product->condition,
-                'is_food'                  => $product->is_food,
-                'weight'                   => $product->weight,
+                'price'                           => $price,
+                'brand'                           => $product->brand,
+                'condition'                       => $product->condition,
+                'is_food'                         => $product->is_food,
+                'weight'                          => $product->weight,
                 'price_with_buyer_protection_fee' => $price_with_buyer_protection_fee,
-                'buyer_protection_fee'=>$calculate_buyer_protection_fee,
-                'platform_fee' => $fee->platform_fee,
-                'shipping_fee'=>$shipping_fee,
-                'final_price'=>round($price+$calculate_buyer_protection_fee+$fee->platform_fee+$shipping_fee,2),
-                'offer_buying_status'      => $offer->is_buy,
-                'offer_status'             => $offer->status,
-                'per_day_promotion_amount' => $perday_promotion,
-                'view_count'               => $product->view_count,
-                'wishlist_count'           => $product->wishlists_count,
-                'wishlist'                 => $wishlist,
-                'created_at'               => $product->created_at,
-                'updated_at'               => $product->updated_at,
+                'buyer_protection_fee'            => $calculate_buyer_protection_fee,
+                'platform_fee'                    => $fee->platform_fee,
+                'shipping_fee'                    => $shipping_fee,
+                'final_price'                     => round($price + $calculate_buyer_protection_fee + $fee->platform_fee + $shipping_fee, 2),
+                'offer_buying_status'             => $offer->is_buy,
+                'offer_status'                    => $offer->status,
+                'per_day_promotion_amount'        => $perday_promotion,
+                'view_count'                      => $product->view_count,
+                'wishlist_count'                  => $product->wishlists_count,
+                'wishlist'                        => $wishlist,
+                'created_at'                      => $product->created_at,
+                'updated_at'                      => $product->updated_at,
                 // 'rating' => $rating_data,
-                'user'                     => [
+                'user'                            => [
                     'name'    => $product->user->name,
                     'email'   => $product->user->email,
                     'address' => $product->user->address,
@@ -237,14 +237,15 @@ class OfferAskingController extends Controller
         }
     }
 
-    public function change_status($id){
-        $offer           = OfferPrice::findOrFail($id);
+    public function change_status($id)
+    {
+        $offer         = OfferPrice::findOrFail($id);
         $offer->is_buy = 1;
         $offer->save();
         return response()->json([
-            'status'=> true,
-            'message'=>'Offer buyed successfully',
-            'data'=>$offer,
+            'status'  => true,
+            'message' => 'Offer buyed successfully',
+            'data'    => $offer,
         ]);
     }
 }

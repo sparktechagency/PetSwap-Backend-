@@ -120,7 +120,6 @@ Route::group(['middleware' => 'api'], function ($router) {
             Route::post('buy-product-intent', [StripeController::class, 'buyProductIntent']);
             Route::post('product-promotion-intent', [StripeController::class, 'productPromotionIntent']);
 
-            //shipment process
 
         });
 
