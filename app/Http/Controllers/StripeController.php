@@ -132,8 +132,12 @@ class StripeController extends Controller
                 'currency'                  => 'usd',
                 'payment_method'            => $request->payment_method,
                 'confirm'                   => true,
-                'capture_method'            => 'manual', // Hold the payment
+                'capture_method'            => 'manual',
                 'description'               => 'Product Purchase',
+                'application_fee_amount'    => (int) ($platformFee * 100),
+                'transfer_data'             => [
+                    'destination' => $product->user->stripe_account_id,
+                ],
                 'automatic_payment_methods' => [
                     'enabled'         => true,
                     'allow_redirects' => 'never',

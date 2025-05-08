@@ -34,19 +34,21 @@ class PaymentRelese extends Command
         Stripe::setApiKey(env('STRIPE_SECRET'));
 
         $heldPayments = Payment::where('status', 'On Hold')
-            ->where('created_at', '<=', now()->subDays(7))
+            ->where('created_at', '<=', now()->subDays(6))
             ->get();
 
         foreach ($heldPayments as $payment) {
             try {
                 $intent = PaymentIntent::retrieve($payment->stripe_payment_id);
-                $intent->capture();
-                Transfer::create([
-                    'amount'      => (int) ($payment->amount * 100),
-                    'currency'    => 'usd',
-                    'destination' => User::find($payment->seller_id)->stripe_account_id,
-                    'description' => 'Product Payment Transfer',
-                ]);
+                if ($intent->status === 'requires_capture') {
+                    $intent->capture();
+                    Transfer::create([
+                        'amount'      => (int) ($payment->amount * 100),
+                        'currency'    => 'usd',
+                        'destination' => User::find($payment->seller_id)->stripe_account_id,
+                        'description' => 'Product Payment Transfer',
+                    ]);
+                }
 
                 Payment::where('id', $payment->id)
                     ->update(['status' => 'Completed', 'updated_at' => now()]);

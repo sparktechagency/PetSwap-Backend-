@@ -12,4 +12,4 @@ use Illuminate\Support\Facades\Schedule;
 
 
 Schedule::command(CheckProductPromotedTime::class)->daily();
-Schedule::command(PaymentRelese::class)->weekly();
+Schedule::command(PaymentRelese::class)->daily();
