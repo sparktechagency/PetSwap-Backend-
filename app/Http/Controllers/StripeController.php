@@ -134,10 +134,6 @@ class StripeController extends Controller
                 'confirm'                   => true,
                 'capture_method'            => 'manual',
                 'description'               => 'Product Purchase',
-                'application_fee_amount'    => (int) ($platformFee * 100),
-                'transfer_data'             => [
-                    'destination' => $product->user->stripe_account_id,
-                ],
                 'automatic_payment_methods' => [
                     'enabled'         => true,
                     'allow_redirects' => 'never',
