@@ -53,43 +53,92 @@ class StripeController extends Controller
         }
     }
 
+    // public function buyProductIntent(Request $request)
+    // {
+    //     $validator = Validator::make($request->all(), [
+    //         'total_price' => 'required|min:1',
+    //         'product_id'  => 'required|integer',
+    //     ]);
+    //     if ($validator->fails()) {
+    //         return response()->json(['status' => false, 'message' => $validator->errors()], 400);
+    //     }
+    //     $total_price = $request->total_price;
+    //     $product     = Product::with('user')
+    //         ->where('id', $request->product_id)
+    //         ->first();
+
+    //     $product_price = $product->price;
+    //     $platformFee   = $total_price - $product_price;
+
+    //     $stripeAccountId = $product->user->stripe_account_id;
+    //     if (! $stripeAccountId) {
+    //         return response()->json([
+    //             'status'  => false,
+    //             'message' => 'This user doesnot connect with any stripe account.',
+    //         ], 404);
+    //     }
+
+    //     Stripe::setApiKey(env('STRIPE_SECRET'));
+    //     try {
+    //         $paymentIntent = PaymentIntent::create([
+    //             'amount'                 => (int) ($total_price * 100),
+    //             'currency'               => 'usd',
+    //             'payment_method'         => $request->payment_method,
+    //             'transfer_data'          => [
+    //                 'destination' => $stripeAccountId,
+    //             ],
+    //             'application_fee_amount' => (int) ($platformFee * 100),
+    //         ]);
+
+    //         return response()->json([
+    //             'data' => $paymentIntent,
+    //         ]);
+    //     } catch (Exception $e) {
+    //         return response()->json(['error' => $e->getMessage()], 500);
+    //     }
+    // }
+
     public function buyProductIntent(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'total_price' => 'required|min:1',
+            'total_price' => 'required|numeric|min:1',
             'product_id'  => 'required|integer',
         ]);
+
         if ($validator->fails()) {
             return response()->json(['status' => false, 'message' => $validator->errors()], 400);
         }
-        $total_price = $request->total_price;
-            $product     = Product::with('user')
-            ->where('id', $request->product_id)
-            ->first();
 
-        $product_price = $product->price;
-        $platformFee   = $total_price - $product_price;
+        $product = Product::with('user')->find($request->product_id);
+
+        if (! $product) {
+            return response()->json(['status' => false, 'message' => 'Product not found'], 404);
+        }
+
+        $productPrice = $product->price;
+        $totalPrice   = $request->total_price;
+        $platformFee  = $totalPrice - $productPrice;
 
         $stripeAccountId = $product->user->stripe_account_id;
         if (! $stripeAccountId) {
-            return response()->json([
-                'status'  => false,
-                'message' => 'This user doesnot connect with any stripe account.',
-            ], 404);
+            return response()->json(['status' => false, 'message' => 'This user has no Stripe account connected'], 404);
         }
 
         Stripe::setApiKey(env('STRIPE_SECRET'));
+
         try {
             $paymentIntent = PaymentIntent::create([
-                'amount'                 => (int) ($total_price * 100),
-                'currency'               => 'usd',
-                'payment_method'         => $request->payment_method,
-                'transfer_data'          => [
-                    'destination' => $stripeAccountId,
+                'amount'                    => (int) ($totalPrice * 100),
+                'currency'                  => 'usd',
+                'payment_method'            => $request->payment_method,
+                'confirm'                   => true,
+                'capture_method'            => 'manual', // Hold the payment
+                'description'               => 'Product Purchase',
+                'automatic_payment_methods' => [
+                    'enabled'         => true,
+                    'allow_redirects' => 'never',
                 ],
-                'application_fee_amount' => (int) ($platformFee * 100),
             ]);
-
             return response()->json([
                 'data' => $paymentIntent,
             ]);

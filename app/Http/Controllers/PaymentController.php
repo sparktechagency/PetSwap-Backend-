@@ -35,7 +35,9 @@ class PaymentController extends Controller
                 'currency'             => 'USD',
                 'platform_fee'         => $platformFee,
                 'buyer_protection_fee' => $calculate_buyer_protection_fee,
+                'stripe_payment_id'    => $request->stripe_payment_id,
                 'country'              => $request->country,
+                'status'               => 'On Hold',
                 'state'                => $request->state,
                 'city'                 => $request->city,
                 'zip'                  => $request->zip,
@@ -43,8 +45,8 @@ class PaymentController extends Controller
 
             $notification_data = [
                 'buyer_image' => Auth::user()->avatar,
-                'buyer_name' => Auth::user()->name,
-                'product_id' => $product->id,
+                'buyer_name'  => Auth::user()->name,
+                'product_id'  => $product->id,
             ];
 
             $seller->notify(new BuyProductNotification($notification_data));

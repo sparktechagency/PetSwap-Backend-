@@ -176,3 +176,15 @@ Route::group(['middleware' => 'api'], function ($router) {
 
 
 });
+
+
+
+
+
+
+
+// Route::post('/stripe/create-intent', [PaymentController::class, 'createPaymentIntent']);
+// Route::post('/stripe/release-payment/{order}', [PaymentController::class, 'releasePayment']);
+
+// Route::post('/sendcloud/create-parcel', [SendcloudController::class, 'createParcel']);
+// Route::post('/sendcloud/webhook', [SendcloudController::class, 'handleWebhook']);
