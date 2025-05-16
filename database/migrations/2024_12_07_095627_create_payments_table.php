@@ -16,11 +16,11 @@ return new class extends Migration
             $table->foreignId('buyer_id')->constrained('users')->cascadeOnDelete();
             $table->foreignId('seller_id')->constrained('users')->cascadeOnDelete();
             $table->foreignId('product_id')->constrained('products')->cascadeOnDelete();
-            $table->float('amount',8, 2)->comment('product_price');
+            $table->float('amount', 8, 2)->comment('product_price');
             $table->string('currency')->default('USD');
-            $table->float('platform_fee',8,2)->nullable();
-            $table->float('buyer_protection_fee',8,2)->nullable();
-            $table->string('status')->default('Pending')->comment('Pending, On Hold ,Completed ,Failed');
+            $table->float('platform_fee', 8, 2)->nullable();
+            $table->float('buyer_protection_fee', 8, 2)->nullable();
+            $table->string('status')->default('Pending')->comment('Pending, On Process, ,Received, Completed ,Failed');
             $table->string('stripe_payment_id')->nullable();
             $table->string('country')->nullable();
             $table->string('state')->nullable();

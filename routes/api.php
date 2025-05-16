@@ -1,27 +1,28 @@
 <?php
 
-use App\Http\Controllers\Admin_Panel\CategoryController;
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\OrderController;
+use App\Http\Controllers\StripeController;
+use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\api\AuthController;
+use App\Http\Controllers\api\RatingController;
+use App\Http\Controllers\api\ProductController;
+use App\Http\Controllers\Api\SettingController;
+use App\Http\Controllers\Backend\FeeController;
+use App\Http\Controllers\OfferAskingController;
+use App\Http\Controllers\api\HomePageController;
+use App\Http\Controllers\api\WishlistController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\api\HelpCenterController;
 use App\Http\Controllers\Admin_Panel\FAQController;
+use App\Http\Controllers\SubcriptionPlanController;
+use App\Http\Controllers\Admin_Panel\UserController;
 use App\Http\Controllers\Admin_Panel\SliderController;
+use App\Http\Controllers\Admin_Panel\CategoryController;
+use App\Http\Controllers\Admin_Panle\DashboardController;
+use App\Http\Controllers\api\Frontend\ShipmentController;
 use App\Http\Controllers\Admin_panel\SubCategoryController;
 use App\Http\Controllers\Admin_Panel\TransactionController;
-use App\Http\Controllers\Admin_Panel\UserController;
-use App\Http\Controllers\Admin_Panle\DashboardController;
-use App\Http\Controllers\api\AuthController;
-use App\Http\Controllers\api\HelpCenterController;
-use App\Http\Controllers\api\HomePageController;
-use App\Http\Controllers\api\ProductController;
-use App\Http\Controllers\api\RatingController;
-use App\Http\Controllers\Api\SettingController;
-use App\Http\Controllers\api\WishlistController;
-use App\Http\Controllers\Backend\FeeController;
-use App\Http\Controllers\NotificationController;
-use App\Http\Controllers\OfferAskingController;
-use App\Http\Controllers\OrderController;
-use App\Http\Controllers\PaymentController;
-use App\Http\Controllers\StripeController;
-use App\Http\Controllers\SubcriptionPlanController;
-use Illuminate\Support\Facades\Route;
 
 Route::group(['middleware' => 'api'], function ($router) {
 
@@ -120,17 +121,9 @@ Route::group(['middleware' => 'api'], function ($router) {
             Route::post('buy-product-intent', [StripeController::class, 'buyProductIntent']);
             Route::post('product-promotion-intent', [StripeController::class, 'productPromotionIntent']);
 
-
+            //shipment routes
+            Route::post('/create-shipment', [ShipmentController::class, 'createShipment']);
         });
-
-
-
-
-
-
-
-
-
 
         // admin routes
         Route::middleware('admin')->group(function () {
@@ -173,18 +166,4 @@ Route::group(['middleware' => 'api'], function ($router) {
         });
     });
 
-
-
 });
-
-
-
-
-
-
-
-// Route::post('/stripe/create-intent', [PaymentController::class, 'createPaymentIntent']);
-// Route::post('/stripe/release-payment/{order}', [PaymentController::class, 'releasePayment']);
-
-// Route::post('/sendcloud/create-parcel', [SendcloudController::class, 'createParcel']);
-// Route::post('/sendcloud/webhook', [SendcloudController::class, 'handleWebhook']);

@@ -37,7 +37,7 @@ class PaymentController extends Controller
                 'buyer_protection_fee' => $calculate_buyer_protection_fee,
                 'stripe_payment_id'    => $request->stripe_payment_id,
                 'country'              => $request->country,
-                'status'               => 'On Hold',
+                'status'               => 'Pending',
                 'state'                => $request->state,
                 'city'                 => $request->city,
                 'zip'                  => $request->zip,
