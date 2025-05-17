@@ -35,7 +35,7 @@ class PaymentRelese extends Command
         Stripe::setApiKey(env('STRIPE_SECRET'));
 
         // Release held payments after 6 days
-        $heldPayments = Payment::where('status', 'Received')
+        $heldPayments = Payment::where('status', 'On Process')
             ->where('created_at', '<=', now()->subDays(6))
             ->get();
 
