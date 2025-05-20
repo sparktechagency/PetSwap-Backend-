@@ -7,6 +7,7 @@ use App\Models\Shipping;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class SendCloudController extends Controller
 {
@@ -20,7 +21,6 @@ class SendCloudController extends Controller
         $this->secretKey = env('SENDCLOUD_API_SECRET');
     }
 
-    // 1️⃣ Get Shipping Methods
     public function getShippingMethods()
     {
         $response = Http::withBasicAuth($this->publicKey, $this->secretKey)
@@ -29,7 +29,6 @@ class SendCloudController extends Controller
         return response()->json($response->json());
     }
 
-    // 2️⃣ Create Parcel + Save Tracking + Label
     public function createParcel(Request $request)
     {
         $validated = $request->validate([
@@ -37,59 +36,84 @@ class SendCloudController extends Controller
             'shipping_method' => 'required|numeric',
         ]);
 
-        $order_info   = Payment::findOrFail($request->order_id);
+        $order_info   = Payment::findOrFail($validated['order_id']);
         $product_info = Product::findOrFail($order_info->product_id);
-
-        $buyer_info = User::findOrFail($order_info->buyer_id);
-        $parcelData = [
-            'parcel' => [
-                'name'            => $buyer_info->name,
-                'address'         => $buyer_info->address,
-                'city'            => $order_info->city,
-                'postal_code'     => $order_info->zip,
-                'country'         => $order_info->country,
-                'email'           => $buyer_info->email,
-                'weight'          => $product_info->weight,
-                'shipping_method' => $validated['shipping_method'],
-            ],
+        $buyer_info   = User::findOrFail($order_info->buyer_id);
+        $parcel       = [
+            'name'            => $buyer_info->name,
+            'address'         => $buyer_info->address,
+            'city'            => $order_info->city,
+            'postal_code'     => $order_info->zip,
+            'country'         => $order_info->country,
+            'email'           => $buyer_info->email,
+            'order_number'    => $order_info->id,
+            'weight'          => $product_info->weight,
+            'parcel_items'    => [[
+                'description' => $product_info->title,
+                'quantity'    => 1,
+                'weight'      => $product_info->weight,
+                'value'       => $product_info->price,
+            ]],
+            'shipping_method' => $validated['shipping_method'],
         ];
 
-        // Create Parcel
+        if (! empty($validated['to_service_point']) && ! empty($validated['to_post_number'])) {
+            $parcel['to_service_point'] = $validated['to_service_point'];
+            $parcel['to_post_number']   = $validated['to_post_number'];
+        }
+
+        $parcelData = [
+            'parcel'        => $parcel,
+            'request_label' => true,
+        ];
+
         $response = Http::withBasicAuth($this->publicKey, $this->secretKey)
             ->post($this->baseUrl . 'parcels', $parcelData);
 
         $data = $response->json();
 
         if (! isset($data['parcel'])) {
-            return response()->json(['error' => 'Failed to create parcel'], 500);
+            Log::error('Failed to create parcel', ['response' => $data]);
+            return response()->json(['error' => 'Parcel creation failed'], 500);
         }
 
-        $parcel = $data['parcel'];
-
-        // 🔄 Get Label via Parcel ID
-        $labelRes = Http::withBasicAuth($this->publicKey, $this->secretKey)
-            ->get($this->baseUrl . 'labels/' . $parcel['id']);
-
-        $label = $labelRes->json();
-
-        // ✅ Save to Shipping
+        $parcel                    = $data['parcel'];
         $shipping                  = new Shipping();
-        $shipping->tracking_number = $parcel['tracking_number'] ?? null;
-        $shipping->tracking_url    = $parcel['tracking_url'] ?? null;
-        $shipping->label_url       = $label['label']['label_printer'] ?? null;
+        $shipping->payment_id      = $order_info->id;
+        $shipping->parcel_id       = $parcel['id'];
+        $shipping->tracking_number = $parcel['tracking_number'] ?? '';
+        $shipping->tracking_url    = $parcel['tracking_url'] ?? '';
+        $shipping->label_url       = $label['label']['label_printer'] ?? '';
         $shipping->shipping_status = 'shipped';
         $shipping->save();
 
-        // ✅ Update the order
-        $order_info->status = 'On Process';
-        $order_info->save();
         return response()->json([
-            'status'       => true,
-            'message'      => 'Parcel created and label generated.',
-            'tracking_url' => $shipping->tracking_url,
-            'label_url'    => $shipping->label_url,
+            'status'  => true,
+            'message' => 'Parcel created successfully.',
+            'parcel'  => $parcel,
         ]);
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+
+
+
+
+
 
     // 3️⃣ Track Order
     // public function trackOrder($orderId)
@@ -112,5 +136,35 @@ class SendCloudController extends Controller
 
     //     return redirect($order->label_url); // or download directly
     // }
+
+    public function generateLabel($parcelId)
+    {
+        $labelRes = Http::withBasicAuth($this->publicKey, $this->secretKey)
+            ->get($this->baseUrl . 'labels/' . $parcelId);
+
+        $label = $labelRes->json();
+        Log::info('Label fetch response', $label);
+
+        if (! isset($label['label']) || ! isset($label['label']['label_printer'])) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'Label not yet available or failed to generate.',
+                'data'    => $label,
+            ], 404);
+        }
+
+        // Optional: Update DB if needed
+        $shipping = Shipping::where('parcel_id', $parcelId)->first();
+        if ($shipping) {
+            $shipping->label_url = $label['label']['label_printer'];
+            $shipping->save();
+        }
+
+        return response()->json([
+            'status'    => true,
+            'message'   => 'Label generated successfully.',
+            'label_url' => $label['label']['label_printer'],
+        ]);
+    }
 
 }

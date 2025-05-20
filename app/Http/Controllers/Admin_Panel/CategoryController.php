@@ -74,8 +74,7 @@ class CategoryController extends Controller
             return response()->json(['status' => false, 'message' => $validator->errors()], 400);
         }
 
-        try {
-            $category = Category::findOrFail($id);
+        $category = Category::findOrFail($id);
 
             // Update the category's name
             $category->update([
@@ -92,8 +91,8 @@ class CategoryController extends Controller
                 $final_name = time() . '.' . $request->icon->extension();
                 $request->icon->move(public_path('uploads/category'), $final_name);
                 $image_path = 'category/' . $final_name;
+                $category->icon = $image_path;
             }
-            $category->icon = $image_path;
             $category->save();
 
             // Handle subcategories
@@ -120,12 +119,7 @@ class CategoryController extends Controller
                 'data' => $category->load('subcategories'),
             ], 200);
 
-        } catch (Exception $e) {
-            return response()->json([
-                'status' => false,
-                'message' => 'No data found',
-            ], 404);
-        }
+
     }
 
     public function delete($id)

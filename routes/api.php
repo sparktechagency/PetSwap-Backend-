@@ -129,7 +129,8 @@ Route::group(['middleware' => 'api'], function ($router) {
 
 
 
-
+                Route::get('service-points', [SendCloudController::class, 'getServicePoints']);
+                Route::get('generate-label/{id}', [SendCloudController::class, 'generateLabel']);
                 Route::get('track-order/{id}', [SendCloudController::class, 'trackOrder']);
                 Route::get('label-download/{id}', [SendCloudController::class, 'downloadLabel']);
             });

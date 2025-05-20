@@ -20,12 +20,12 @@ return new class extends Migration
             $table->string('currency')->default('USD');
             $table->float('platform_fee', 8, 2)->nullable();
             $table->float('buyer_protection_fee', 8, 2)->nullable();
-            $table->string('status')->default('Pending')->comment('Pending, On Process, ,Received, Completed ,Failed');
+            $table->string('status')->default('Pending')->comment('Pending, On Process ,Received, Completed ,Failed');
             $table->string('stripe_payment_id')->nullable();
             $table->string('country')->nullable();
             $table->string('state')->nullable();
             $table->string('city')->nullable();
-            $table->string('zip')->nullable();
+            $table->string('zip')->nullable()->comment('post_code');
             $table->timestamps();
         });
     }

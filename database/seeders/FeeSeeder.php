@@ -13,6 +13,7 @@ class FeeSeeder extends Seeder
     {
         Fee::create([
             'platform_fee'         => 1,
+            'delivery_fee'=>5.74,
             'buyer_protection_fee' => 5,
             'per_day_promotion_amount'=>2
         ]);
