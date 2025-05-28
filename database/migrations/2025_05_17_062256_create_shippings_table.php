@@ -14,9 +14,9 @@ return new class extends Migration
         Schema::create('shippings', function (Blueprint $table) {
             $table->id();
             $table->foreignId('payment_id')->constrained('payments')->cascadeOnDelete();
-            $table->string('tracking_number')->nullable();
-            $table->string('tracking_url')->nullable();
-            $table->string('label_url')->nullable();
+            $table->longText('tracking_number')->nullable();
+            $table->longText('tracking_url')->nullable();
+            $table->longText('label_url')->nullable();
             $table->string('shipping_status')->default('pending');
             $table->timestamps();
         });

@@ -96,13 +96,13 @@ class DashboardController extends Controller
         $data = [
             'current_period' => [
                 'active_users' => $activeUsers,
-                'transactions' => $transactions,
-                'revenue' => $revenue,
+                'transactions' => round($transactions, 2),
+                'revenue' => round($revenue, 2),
             ],
             'changes' => [
                 'days_count' => $daysCount,
                 'user_difference' => $userDifference,
-                'transaction_difference' => $transactionDifference,
+                'transaction_difference' => round($transactionDifference, 2),
                 'revenue_difference' => $revenueDifference,
             ],
         ];

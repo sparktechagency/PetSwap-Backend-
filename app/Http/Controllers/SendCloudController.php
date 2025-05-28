@@ -28,7 +28,6 @@ class SendCloudController extends Controller
 
         return response()->json($response->json());
     }
-
     public function createParcel(Request $request)
     {
         $validated = $request->validate([
@@ -36,135 +35,141 @@ class SendCloudController extends Controller
             'shipping_method' => 'required|numeric',
         ]);
 
-        $order_info   = Payment::findOrFail($validated['order_id']);
-        $product_info = Product::findOrFail($order_info->product_id);
-        $buyer_info   = User::findOrFail($order_info->buyer_id);
-        $parcel       = [
-            'name'            => $buyer_info->name,
-            'address'         => $buyer_info->address,
-            'city'            => $order_info->city,
-            'postal_code'     => $order_info->zip,
-            'country'         => $order_info->country,
-            'email'           => $buyer_info->email,
-            'order_number'    => $order_info->id,
-            'weight'          => $product_info->weight,
-            'parcel_items'    => [[
-                'description' => $product_info->title,
-                'quantity'    => 1,
-                'weight'      => $product_info->weight,
-                'value'       => $product_info->price,
-            ]],
+        $order   = Payment::findOrFail($validated['order_id']);
+        $product = Product::findOrFail($order->product_id);
+        $buyer   = User::findOrFail($order->buyer_id);
+
+        $parcel = [
+            'name'            => $buyer->name,
+            'address'         => $buyer->address,
+            'city'            => $order->city,
+            'postal_code'     => $order->zip,
+            'country'         => $order->country,
+            'email'           => $buyer->email,
+            'order_number'    => $order->id,
+            // 'weight'          => $product->weight,
+            'weight'          => 3.5,
             'shipping_method' => $validated['shipping_method'],
+            'request_label'   => true,
+            'parcel_items'    => [[
+                'description' => $product->title,
+                'quantity'    => 1,
+                'weight'      => $product->weight,
+                'value'       => $product->price,
+            ]],
         ];
 
-        if (! empty($validated['to_service_point']) && ! empty($validated['to_post_number'])) {
-            $parcel['to_service_point'] = $validated['to_service_point'];
-            $parcel['to_post_number']   = $validated['to_post_number'];
+        if (! empty($request->to_service_point) && ! empty($request->to_post_number)) {
+            $parcel['to_service_point'] = $request->to_service_point;
+            $parcel['to_post_number']   = $request->to_post_number;
         }
 
-        $parcelData = [
-            'parcel'        => $parcel,
-            'request_label' => true,
-        ];
-
         $response = Http::withBasicAuth($this->publicKey, $this->secretKey)
-            ->post($this->baseUrl . 'parcels', $parcelData);
+            ->post($this->baseUrl . 'parcels', ['parcel' => $parcel]);
 
         $data = $response->json();
 
         if (! isset($data['parcel'])) {
-            Log::error('Failed to create parcel', ['response' => $data]);
+            Log::error('Parcel creation failed', ['response' => $data]);
             return response()->json(['error' => 'Parcel creation failed'], 500);
         }
 
-        $parcel                    = $data['parcel'];
-        $shipping                  = new Shipping();
-        $shipping->payment_id      = $order_info->id;
-        $shipping->parcel_id       = $parcel['id'];
-        $shipping->tracking_number = $parcel['tracking_number'] ?? '';
-        $shipping->tracking_url    = $parcel['tracking_url'] ?? '';
-        $shipping->label_url       = $label['label']['label_printer'] ?? '';
-        $shipping->shipping_status = 'shipped';
-        $shipping->save();
+        $parcelData = $data['parcel'];
+
+        Shipping::create([
+            'payment_id'      => $order->id,
+            'parcel_id'       => $parcelData['id'],
+            'tracking_number' => $parcelData['tracking_number'] ?? '',
+            'tracking_url'    => $parcelData['tracking_url'] ?? '',
+            'shipping_status' => 'shipped',
+        ]);
 
         return response()->json([
             'status'  => true,
             'message' => 'Parcel created successfully.',
-            'parcel'  => $parcel,
+            'parcel'  => $parcelData,
         ]);
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
-
-
-
-
-
-
-    // 3️⃣ Track Order
-    // public function trackOrder($orderId)
-    // {
-    //     $order = Order::findOrFail($orderId);
-    //     return response()->json([
-    //         'tracking_number' => $order->tracking_number,
-    //         'tracking_url'    => $order->tracking_url,
-    //     ]);
-    // }
-
-    // 4️⃣ Download Label (optional frontend route)
-    // public function downloadLabel($orderId)
-    // {
-    //     $order = Order::findOrFail($orderId);
-
-    //     if (! $order->label_url) {
-    //         return response()->json(['error' => 'Label not available'], 404);
-    //     }
-
-    //     return redirect($order->label_url); // or download directly
-    // }
-
     public function generateLabel($parcelId)
     {
-        $labelRes = Http::withBasicAuth($this->publicKey, $this->secretKey)
+        $response = Http::withBasicAuth($this->publicKey, $this->secretKey)
             ->get($this->baseUrl . 'labels/' . $parcelId);
 
-        $label = $labelRes->json();
-        Log::info('Label fetch response', $label);
+        $labelData = $response->json();
 
-        if (! isset($label['label']) || ! isset($label['label']['label_printer'])) {
+        $labelInfo = $labelData['label'] ?? null;
+
+        if (! is_array($labelInfo) || empty($labelInfo['label_printer'])) {
             return response()->json([
                 'status'  => false,
-                'message' => 'Label not yet available or failed to generate.',
-                'data'    => $label,
+                'message' => 'Label not yet available.',
+                'data'    => $labelData,
             ], 404);
         }
 
-        // Optional: Update DB if needed
+        // Update local DB
         $shipping = Shipping::where('parcel_id', $parcelId)->first();
         if ($shipping) {
-            $shipping->label_url = $label['label']['label_printer'];
+            $shipping->label_url = $labelInfo['label_printer'];
             $shipping->save();
         }
 
         return response()->json([
             'status'    => true,
-            'message'   => 'Label generated successfully.',
-            'label_url' => $label['label']['label_printer'],
+            'message'   => 'Label fetched successfully.',
+            'label_url' => $labelInfo['label_printer'],
         ]);
     }
+    public function downloadLabel($parcelId)
+    {
+        $response = Http::withBasicAuth($this->publicKey, $this->secretKey)
+            ->get($this->baseUrl . "labels/label_printer/{$parcelId}");
+
+        if ($response->successful()) {
+            $headers = [
+                'Content-Type'        => 'application/pdf',
+                'Content-Disposition' => 'attachment; filename="label_' . $parcelId . '.pdf"',
+            ];
+
+            return response($response->body(), 200, $headers);
+        }
+
+        return response()->json(['error' => 'Failed to download label'], 500);
+    }
+
+public function trackParcel($parcelId)
+{
+    $response = Http::withBasicAuth($this->publicKey, $this->secretKey)
+        ->get($this->baseUrl . 'parcels/' . $parcelId);
+
+    $parcel = $response->json();
+
+    if (!$response->successful()) {
+        return response()->json([
+            'status'  => false,
+            'message' => 'Failed to fetch parcel info.',
+            'error'   => $parcel,
+        ], 500);
+    }
+
+    if (!isset($parcel['status'])) {
+        return response()->json([
+            'status'  => false,
+            'message' => 'Parcel not found or no status available.',
+            'data'    => $parcel,
+        ], 404);
+    }
+
+    return response()->json([
+        'status'   => true,
+        'message'  => 'Parcel status fetched successfully.',
+        'tracking' => [
+            'tracking_number' => $parcel['tracking_number'] ?? null,
+            'tracking_url'    => $parcel['tracking_url'] ?? null,
+            'status'          => $parcel['status']['message'] ?? 'No status message',
+        ],
+    ]);
+}
 
 }
+
