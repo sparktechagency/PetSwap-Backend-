@@ -121,18 +121,15 @@ Route::group(['middleware' => 'api'], function ($router) {
             Route::post('buy-product-intent', [StripeController::class, 'buyProductIntent']);
             Route::post('product-promotion-intent', [StripeController::class, 'productPromotionIntent']);
 
+
             //sendcloud routes
             Route::prefix('sendcloud')->group(function(){
                 Route::get('shipping-methods', [SendCloudController::class, 'getShippingMethods']);
+                Route::get('shipping-price', [SendCloudController::class, 'getShippingPrice']);
                 Route::post('create-parcel', [SendCloudController::class, 'createParcel']);
-
-
-
-
-                Route::get('service-points', [SendCloudController::class, 'getServicePoints']);
                 Route::get('generate-label/{id}', [SendCloudController::class, 'generateLabel']);
-                Route::get('track-order/{id}', [SendCloudController::class, 'trackParcel']);
                 Route::get('label-download/{id}', [SendCloudController::class, 'downloadLabel']);
+                Route::get('track-parcel/{id}', [SendCloudController::class, 'trackParcel']);
             });
         });
 

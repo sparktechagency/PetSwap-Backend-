@@ -23,7 +23,7 @@ return new class extends Migration
             $table->string('brand')->nullable();
             $table->string('condition')->nullable();
             $table->boolean('is_food')->default(false);
-            $table->string('weight')->nullable();
+            $table->string('weight')->default(0.5);
             $table->unsignedBigInteger('view_count')->default(0);
             $table->enum('status', ['Approved','Pending','Canceled'])->default('Pending');
             $table->boolean('is_promoted')->default(false);

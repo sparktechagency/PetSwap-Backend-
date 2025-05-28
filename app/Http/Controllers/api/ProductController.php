@@ -52,9 +52,11 @@ class ProductController extends Controller
             'sub_category_ids' => 'required|array',
             'title'            => 'required|string|max:255',
             'price'            => 'required|numeric',
+            'weight'            => 'required|string',
             'images'           => 'nullable|array|max:5',
             'images.*'         => 'image|mimes:jpeg,png,jpg|max:10240',
         ]);
+
         if ($validator->fails()) {
             return response()->json(['status' => false, 'message' => $validator->errors()], 400);
         }
@@ -110,6 +112,7 @@ class ProductController extends Controller
             'sub_category_id' => 'required|array',
             'title'           => 'required|string|max:255',
             'price'           => 'required|numeric',
+             'weight'            => 'required|numeric',
             'images'          => 'nullable|array|max:5',
             'images.*'        => 'image|mimes:jpeg,png,jpg|max:10240',
         ]);

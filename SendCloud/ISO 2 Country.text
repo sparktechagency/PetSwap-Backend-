@@ -1,0 +1,22 @@
+[
+  { "name": "Germany", "iso2": "DE" },
+  { "name": "Austria", "iso2": "AT" },
+  { "name": "Belgium", "iso2": "BE" },
+  { "name": "Croatia", "iso2": "HR" },
+  { "name": "Denmark", "iso2": "DK" },
+  { "name": "Slovakia", "iso2": "SK" },
+  { "name": "Spain", "iso2": "ES" },
+  { "name": "United States of America", "iso2": "US" },
+  { "name": "Finland", "iso2": "FI" },
+  { "name": "France", "iso2": "FR" },
+  { "name": "Greece", "iso2": "GR" },
+  { "name": "Hungary", "iso2": "HU" },
+  { "name": "Ireland", "iso2": "IE" },
+  { "name": "Italy", "iso2": "IT" },
+  { "name": "Lithuania", "iso2": "LT" },
+  { "name": "Luxembourg", "iso2": "LU" },
+  { "name": "Netherlands", "iso2": "NL" },
+  { "name": "Poland", "iso2": "PL" },
+  { "name": "Portugal", "iso2": "PT" },
+  { "name": "United Kingdom", "iso2": "GB" }
+]

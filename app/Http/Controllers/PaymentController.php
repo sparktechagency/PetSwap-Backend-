@@ -15,10 +15,24 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
-class PaymentController extends Controller
+class PaymentController extends SendCloudController
 {
     public function createPayment(Request $request)
     {
+
+        $validator = Validator::make($request->all(), [
+            'product_id'        => 'required|exists:products,id',
+            'country'           => 'required|string',
+            'state'             => 'required|string',
+            'city'              => 'required|string',
+            'zip'               => 'required|string',
+            'address'           => 'required|string',
+            'total_amount'      => 'required',
+            'stripe_payment_id' => 'required|string',
+        ]);
+        if ($validator->fails()) {
+            return response()->json(['status' => false, 'message' => $validator->errors()], 400);
+        }
         try {
             $product = Product::findOrFail($request->product_id);
             $seller  = User::findOrFail($product->user_id);
@@ -27,14 +41,22 @@ class PaymentController extends Controller
             $platformFee                    = $fee->platform_fee;
             $buyer_protection_fee           = $fee->buyer_protection_fee;
             $calculate_buyer_protection_fee = ($product->price * $buyer_protection_fee) / 100;
-            $payment                        = Payment::create([
+            $delivery_fee                   = round($request->total_amount - ($product->price + $platformFee + $calculate_buyer_protection_fee), 2);
+
+            // update user address
+            $loginUser          = User::find(Auth::id());
+            $loginUser->address = $request->address;
+            $loginUser->save();
+
+            $payment = Payment::create([
                 'buyer_id'             => Auth::id(),
                 'seller_id'            => $seller->id,
                 'product_id'           => $product->id,
-                'amount'               => $product->price,
+                'amount'               => $product->price, //product_price
                 'currency'             => 'USD',
                 'platform_fee'         => $platformFee,
-                'buyer_protection_fee' => $calculate_buyer_protection_fee,
+                'buyer_protection_fee' => round($calculate_buyer_protection_fee, 2),
+                'delivery_fee'         => $delivery_fee,
                 'stripe_payment_id'    => $request->stripe_payment_id,
                 'country'              => $request->country,
                 'status'               => 'Pending',
