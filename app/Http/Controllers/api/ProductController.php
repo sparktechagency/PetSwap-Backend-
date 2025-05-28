@@ -1,7 +1,7 @@
 <?php
 namespace App\Http\Controllers\api;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\SendCloudController;
 use App\Models\Fee;
 use App\Models\Product;
 use App\Models\Rating;
@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
-class ProductController extends Controller
+class ProductController extends SendCloudController
 {
     public function index(Request $request)
     {
@@ -52,7 +52,7 @@ class ProductController extends Controller
             'sub_category_ids' => 'required|array',
             'title'            => 'required|string|max:255',
             'price'            => 'required|numeric',
-            'weight'            => 'required|string',
+            'weight'           => 'required|string',
             'images'           => 'nullable|array|max:5',
             'images.*'         => 'image|mimes:jpeg,png,jpg|max:10240',
         ]);
@@ -112,14 +112,14 @@ class ProductController extends Controller
             'sub_category_id' => 'required|array',
             'title'           => 'required|string|max:255',
             'price'           => 'required|numeric',
-             'weight'            => 'required|numeric',
+            'weight'          => 'required|numeric',
             'images'          => 'nullable|array|max:5',
             'images.*'        => 'image|mimes:jpeg,png,jpg|max:10240',
         ]);
         if ($validator->fails()) {
             return response()->json(['status' => false, 'message' => $validator->errors()], 400);
         }
-        $user=Auth::user();
+        $user = Auth::user();
         if ($user->stripe_account_id == null) {
             return response()->json(['status' => false, 'message' => 'This user does\'t connect to the stripe account'], 400);
         }
@@ -204,6 +204,19 @@ class ProductController extends Controller
             $product         = Product::with('user:id,name,email,avatar,address', 'wishlists')->withCount('wishlists')->where('id', $id)->firstOrFail();
             $product->images = json_decode($product->images, true) ?? [];
 
+            // Determine shipping method and price
+            $shippingMethods = config('shipping_methods');
+            $shippingMethod  = $this->findShippingMethodByWeight(
+                (float) $product->weight,
+                $shippingMethods
+            );
+            $shipping_request_data = new Request([
+                'shipping_method_id' => $shippingMethod['shipping_id'],
+                'weight'             => (float) $product->weight,
+            ]);
+            $shippingApiResponse = $this->getShippingPrice($shipping_request_data);
+            $data                = $shippingApiResponse->getData(true);
+
             $wishlist = $user ? $product->wishlists->contains(function ($wishlist) use ($user) {
                 return $wishlist->user_id == $user->id;
             }) : false;
@@ -235,7 +248,7 @@ class ProductController extends Controller
             $fee                             = Fee::first();
             $calculate_buyer_protection_fee  = round(($product->price * $fee->buyer_protection_fee) / 100, 2);
             $price_with_buyer_protection_fee = round($calculate_buyer_protection_fee + $product->price, 2);
-            $shipping_fee                    = $fee->delivery_fee;
+            $shipping_fee                    = $data['data'][0]['price'];
             $perday_promotion                = $fee->per_day_promotion_amount;
             $response                        = [
                 'id'                              => $product->id,
@@ -271,6 +284,12 @@ class ProductController extends Controller
                     'address' => $product->user->address,
                     'avatar'  => $product->user->avatar,
                 ],
+                'shipping_method'                 => [
+                    'shipping_id' => $shippingMethod['shipping_id'] ?? null,
+                    'name'        => $shippingMethod['name'] ?? null,
+                    'min_weight'  => $shippingMethod['min_weight'] ?? null,
+                    'max_weight'  => $shippingMethod['max_weight'] ?? null,
+                ],
             ];
 
             return response()->json([
@@ -305,6 +324,16 @@ class ProductController extends Controller
                 'message' => "Product not found.",
             ], 404);
         }
+    }
+
+    private function findShippingMethodByWeight(float $weight, array $shippingMethods): ?array
+    {
+        foreach ($shippingMethods as $method) {
+            if ($weight >= $method['min_weight'] && $weight < $method['max_weight']) {
+                return $method;
+            }
+        }
+        return null;
     }
 
 }

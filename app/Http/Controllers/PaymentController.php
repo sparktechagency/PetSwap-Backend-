@@ -21,14 +21,15 @@ class PaymentController extends SendCloudController
     {
 
         $validator = Validator::make($request->all(), [
-            'product_id'        => 'required|exists:products,id',
-            'country'           => 'required|string',
-            'state'             => 'required|string',
-            'city'              => 'required|string',
-            'zip'               => 'required|string',
-            'address'           => 'required|string',
-            'total_amount'      => 'required',
-            'stripe_payment_id' => 'required|string',
+            'product_id'         => 'required|exists:products,id',
+            'country'            => 'required|string',
+            'state'              => 'required|string',
+            'city'               => 'required|string',
+            'zip'                => 'required|string',
+            'address'            => 'required|string',
+            'total_amount'       => 'required',
+            'stripe_payment_id'  => 'required|string',
+            'shipping_method_id' => 'required|numeric',
         ]);
         if ($validator->fails()) {
             return response()->json(['status' => false, 'message' => $validator->errors()], 400);
@@ -64,6 +65,12 @@ class PaymentController extends SendCloudController
                 'city'                 => $request->city,
                 'zip'                  => $request->zip,
             ]);
+            // create a new parcel
+            $request = new Request([
+                'order_id'        => $payment->id,
+                'shipping_method' => $request->shipping_method_id,
+            ]);
+            $this->createParcel($request);
 
             $notification_data = [
                 'buyer_image' => Auth::user()->avatar,

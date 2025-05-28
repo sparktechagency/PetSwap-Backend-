@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
-class OfferAskingController extends Controller
+class OfferAskingController extends SendCloudController
 {
     public function store(Request $request)
     {
@@ -153,26 +153,26 @@ class OfferAskingController extends Controller
             $product         = Product::with('user:id,name,email,avatar,address', 'wishlists')->withCount('wishlists')->where('id', $offer->product_id)->firstOrFail();
             $product->images = json_decode($product->images, true) ?? [];
 
+                // Determine shipping method and price
+            $shippingMethods = config('shipping_methods');
+            $shippingMethod  = $this->findShippingMethodByWeight(
+                (float) $product->weight,
+                $shippingMethods
+            );
+            $shipping_request_data = new Request([
+                'shipping_method_id' => $shippingMethod['shipping_id'],
+                'weight'             => (float) $product->weight,
+            ]);
+            $shippingApiResponse = $this->getShippingPrice($shipping_request_data);
+            $data                = $shippingApiResponse->getData(true);
+
             $wishlist = $user ? $product->wishlists->contains(function ($wishlist) use ($user) {
                 return $wishlist->user_id == $user->id;
             }) : false;
-            // $last_rating = Rating::with('buyer')->where('products_id', $product->id)->latest()->first();
-            // $rating_count = Rating::where('products_id', $product->id)->count();
-            // if (Auth::user()->id != $product->user_id) {
-            //     $product->view_count += 1;
-            //     $product->save();
-            // }
-            // $rating_data = $last_rating ? [
-            //     'id' => $last_rating->id,
-            //     'rating' => $last_rating->rating,
-            //     'review' => $last_rating->review,
-            //     'total_rating_count' => $rating_count,
-            //     'rating_user' => $last_rating->buyer ? [
-            //         'id' => $last_rating->buyer->id,
-            //         'name' => $last_rating->buyer->name,
-            //         'avatar' => $last_rating->buyer->avatar,
-            //     ] : null,
-            // ] : null;
+
+            $wishlist = $user ? $product->wishlists->contains(function ($wishlist) use ($user) {
+                return $wishlist->user_id == $user->id;
+            }) : false;
             $product_price = $product->price;
             if ($offer->status == 'accept') {
                 $price = $offer->asking_price;
@@ -182,7 +182,7 @@ class OfferAskingController extends Controller
 
             $calculate_buyer_protection_fee  = round(($price * $fee->buyer_protection_fee) / 100, 2);
             $price_with_buyer_protection_fee = round($calculate_buyer_protection_fee + $price, 2);
-            $shipping_fee                    = $fee->delivery_fee;
+                $shipping_fee                    = $data['data'][0]['price'];
             $perday_promotion                = $fee->per_day_promotion_amount;
 
             $response = [
@@ -220,6 +220,12 @@ class OfferAskingController extends Controller
                     'address' => $product->user->address,
                     'avatar'  => $product->user->avatar,
                 ],
+                      'shipping_method'                 => [
+                    'shipping_id' => $shippingMethod['shipping_id'] ?? null,
+                    'name'        => $shippingMethod['name'] ?? null,
+                    'min_weight'  => $shippingMethod['min_weight'] ?? null,
+                    'max_weight'  => $shippingMethod['max_weight'] ?? null,
+                ],
             ];
 
             return response()->json([
@@ -248,4 +254,14 @@ class OfferAskingController extends Controller
             'data'    => $offer,
         ]);
     }
+  private function findShippingMethodByWeight(float $weight, array $shippingMethods): ?array
+    {
+        foreach ($shippingMethods as $method) {
+            if ($weight >= $method['min_weight'] && $weight < $method['max_weight']) {
+                return $method;
+            }
+        }
+        return null;
+    }
+
 }

@@ -21,31 +21,29 @@ class SendCloudController extends Controller
         $this->secretKey = env('SENDCLOUD_API_SECRET');
     }
 
+
     public function getShippingMethods()
     {
         $response = Http::withBasicAuth($this->publicKey, $this->secretKey)
             ->get($this->baseUrl . 'shipping_methods');
 
-         return $response->json();
+        return $response->json();
     }
 
     public function getShippingPrice(Request $request)
     {
         $request->validate([
             'shipping_method_id' => 'required|numeric',
-            'from_country'       => 'required|string|size:2',
-            'to_country'         => 'required|string|size:2',
             'weight'             => 'required|numeric',
-            'weight_unit'        => 'required|in:gram,kilogram',
         ]);
 
         $response = Http::withBasicAuth($this->publicKey, $this->secretKey)
             ->get($this->baseUrl . 'shipping-price', [
                 'shipping_method_id' => $request->shipping_method_id,
-                'from_country'       => strtoupper($request->from_country),
-                'to_country'         => strtoupper($request->to_country),
+                'from_country'       => 'GB',
+                'to_country'         => 'GB',
                 'weight'             => $request->weight,
-                'weight_unit'        => $request->weight_unit,
+                'weight_unit'        => 'kilogram',
             ]);
 
         if (! $response->successful()) {
@@ -58,9 +56,11 @@ class SendCloudController extends Controller
 
         return response()->json([
             'status' => true,
-            'price'  => $response->json(),
+            'data'  => $response->json(),
         ]);
     }
+
+
 
     public function createParcel(Request $request)
     {
@@ -122,6 +122,8 @@ class SendCloudController extends Controller
             'parcel'  => $parcelData,
         ]);
     }
+
+
     public function generateLabel($parcelId)
     {
         $response = Http::withBasicAuth($this->publicKey, $this->secretKey)
@@ -152,32 +154,28 @@ class SendCloudController extends Controller
             'label_url' => $labelInfo['label_printer'],
         ]);
     }
-   public function downloadLabel($parcelId)
-{
-    $response = Http::withBasicAuth($this->publicKey, $this->secretKey)
-        ->get($this->baseUrl . "labels/label_printer/{$parcelId}");
+    public function downloadLabel($parcelId)
+    {
+        $response = Http::withBasicAuth($this->publicKey, $this->secretKey)
+            ->get($this->baseUrl . "labels/label_printer/{$parcelId}");
 
-    if ($response->successful()) {
-        $shipping = Shipping::where('parcel_id', $parcelId)->first();
-        if ($shipping) {
-            $shipping->shipping_status = 'Label Downloaded';
-            $shipping->save();
+        if ($response->successful()) {
+            $shipping = Shipping::where('parcel_id', $parcelId)->first();
+            if ($shipping) {
+                $shipping->shipping_status = 'Label Downloaded';
+                $shipping->save();
+            }
+
+            $headers = [
+                'Content-Type'        => 'application/pdf',
+                'Content-Disposition' => 'attachment; filename="label_' . $parcelId . '.pdf"',
+            ];
+
+            return response($response->body(), 200, $headers);
         }
 
-        $headers = [
-            'Content-Type'        => 'application/pdf',
-            'Content-Disposition' => 'attachment; filename="label_' . $parcelId . '.pdf"',
-        ];
-
-        return response($response->body(), 200, $headers);
+        return response()->json(['error' => 'Failed to download label'], 500);
     }
-
-    return response()->json(['error' => 'Failed to download label'], 500);
-}
-
-
-
-
 
     public function trackParcel($parcelId)
     {
