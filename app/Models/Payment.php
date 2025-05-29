@@ -22,4 +22,8 @@ class Payment extends Model
     {
         return $this->belongsTo(Product::class);
     }
+
+    public function shipping(){
+        return $this->hasOne(Shipping::class);
+    }
 }
