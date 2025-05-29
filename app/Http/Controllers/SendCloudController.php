@@ -21,7 +21,6 @@ class SendCloudController extends Controller
         $this->secretKey = env('SENDCLOUD_API_SECRET');
     }
 
-
     public function getShippingMethods()
     {
         $response = Http::withBasicAuth($this->publicKey, $this->secretKey)
@@ -56,11 +55,9 @@ class SendCloudController extends Controller
 
         return response()->json([
             'status' => true,
-            'data'  => $response->json(),
+            'data'   => $response->json(),
         ]);
     }
-
-
 
     public function createParcel(Request $request)
     {
@@ -123,7 +120,6 @@ class SendCloudController extends Controller
         ]);
     }
 
-
     public function generateLabel($parcelId)
     {
         $response = Http::withBasicAuth($this->publicKey, $this->secretKey)
@@ -154,12 +150,21 @@ class SendCloudController extends Controller
             'label_url' => $labelInfo['label_printer'],
         ]);
     }
-    public function downloadLabel($parcelId)
+    public function downloadLabel(Request $request)
     {
+        $validated = $request->validate([
+            'order_id'  => 'required|numeric',
+            'parcel_id' => 'required|numeric',
+        ]);
+        $parcelId = $request->parcel_id;
+        $order_id = $request->order_id;
         $response = Http::withBasicAuth($this->publicKey, $this->secretKey)
             ->get($this->baseUrl . "labels/label_printer/{$parcelId}");
 
         if ($response->successful()) {
+            $order         = Payment::findOrFail($order_id);
+            $order->status = 'On Process';
+            $order->save();
             $shipping = Shipping::where('parcel_id', $parcelId)->first();
             if ($shipping) {
                 $shipping->shipping_status = 'Label Downloaded';

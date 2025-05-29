@@ -43,9 +43,10 @@ class PaymentRelese extends Command
             try {
                 $intent = PaymentIntent::retrieve($payment->stripe_payment_id);
                 if ($intent->status === 'requires_capture') {
+                    $release_amount = $payment->amount + $payment->delivery_fee;
                     $intent->capture();
                     Transfer::create([
-                        'amount'      => (int) ($payment->amount * 100),
+                        'amount'      => (int) ($release_amount * 100),
                         'currency'    => 'usd',
                         'destination' => User::find($payment->seller_id)->stripe_account_id,
                         'description' => 'Product Payment Transfer',
@@ -66,9 +67,10 @@ class PaymentRelese extends Command
 
         foreach ($pendingPayments as $payment) {
             try {
+                $refundAmount = $payment->amount + $payment->delivery_fee;
                 Refund::create([
                     'payment_intent' => $payment->stripe_payment_id,
-                    // 'amount' => (int) $refundAmount,
+                    'amount'         => (int) $refundAmount,
                 ]);
 
                 Payment::where('id', $payment->id)
