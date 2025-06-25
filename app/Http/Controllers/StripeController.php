@@ -131,13 +131,14 @@ class StripeController extends Controller
                 'amount'                    => (int) ($totalPrice * 100),
                 'currency'                  => 'usd',
                 'payment_method'            => $request->payment_method,
-                'confirm'                   => true,
+                // 'confirm'                   => true,
                 'capture_method'            => 'manual',
-                'description'               => 'Product Purchase',
-                'automatic_payment_methods' => [
-                    'enabled'         => true,
-                    'allow_redirects' => 'never',
-                ],
+                // 'automatic_payment_methods' => [
+                //     'enabled'         => true,
+                //     'allow_redirects' => 'never',
+                // ],
+                'payment_method_types' => ['card'],
+
             ]);
             return response()->json([
                 'data' => $paymentIntent,
