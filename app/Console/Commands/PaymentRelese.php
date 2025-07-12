@@ -37,6 +37,7 @@ class PaymentRelese extends Command
         // Release held payments after 6 days
         $heldPayments = Payment::where('status', 'On Process')
             ->where('created_at', '<=', now()->subDays(6))
+            // ->where('created_at', '<=', now())
             ->get();
 
         foreach ($heldPayments as $payment) {

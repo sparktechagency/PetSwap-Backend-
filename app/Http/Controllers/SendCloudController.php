@@ -182,38 +182,40 @@ class SendCloudController extends Controller
         return response()->json(['error' => 'Failed to download label'], 500);
     }
 
-    public function trackParcel($parcelId)
-    {
-        $response = Http::withBasicAuth($this->publicKey, $this->secretKey)
-            ->get($this->baseUrl . 'parcels/' . $parcelId);
+   public function trackParcel($parcelId)
+{
+    $response = Http::withBasicAuth($this->publicKey, $this->secretKey)
+        ->get($this->baseUrl . 'parcels/' . $parcelId);
 
-        $parcel = $response->json();
+    $parcel = $response->json();
 
-        if (! $response->successful()) {
-            return response()->json([
-                'status'  => false,
-                'message' => 'Failed to fetch parcel info.',
-                'error'   => $parcel,
-            ], 500);
-        }
-
-        if (! isset($parcel['status'])) {
-            return response()->json([
-                'status'  => false,
-                'message' => 'Parcel not found or no status available.',
-                'data'    => $parcel,
-            ], 404);
-        }
-
+    if (! $response->successful()) {
         return response()->json([
-            'status'   => true,
-            'message'  => 'Parcel status fetched successfully.',
-            'tracking' => [
-                'tracking_number' => $parcel['tracking_number'] ?? null,
-                'tracking_url'    => $parcel['tracking_url'] ?? null,
-                'status'          => $parcel['status']['message'] ?? 'No status message',
-            ],
-        ]);
+            'status'  => false,
+            'message' => 'Failed to fetch parcel info.',
+            'error'   => $parcel,
+        ], 500);
     }
+
+    // Main fix: check parcel['parcel']['status'] instead of parcel['status']
+    if (! isset($parcel['parcel']['status'])) {
+        return response()->json([
+            'status'  => false,
+            'message' => 'Parcel not found or no status available.',
+            'data'    => $parcel,
+        ], 404);
+    }
+
+    return response()->json([
+        'status'   => true,
+        'message'  => 'Parcel status fetched successfully.',
+        'tracking' => [
+            'tracking_number' => $parcel['parcel']['tracking_number'] ?? null,
+            'tracking_url'    => $parcel['parcel']['tracking_url'] ?? null,
+            'status'          => $parcel['parcel']['status']['message'] ?? 'No status message',
+        ],
+    ]);
+}
+
 
 }

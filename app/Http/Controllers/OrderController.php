@@ -59,7 +59,7 @@ class OrderController extends Controller
     public function order_details($id)
     {
         try {
-            $order                  = Payment::with('buyer:id,name,avatar', 'seller:id,name,avatar', 'product')->findOrFail($id);
+            $order                  = Payment::with('buyer:id,name,avatar', 'seller:id,name,avatar', 'product','shipping')->findOrFail($id);
             $order->product->images = json_decode($order->product->images, true);
             if (is_array($order->product->images)) {
                 $order->product->images = array_map(function ($image) {
